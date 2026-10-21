@@ -1,0 +1,83 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/theme.json",
+	"version": 3,
+	"settings": {
+		"appearanceTools": true,
+		"useRootPaddingAwareAlignments": true,
+		"layout": {
+			"contentSize": "720px",
+			"wideSize": "1240px"
+		},
+		"color": {
+			"defaultPalette": false,
+			"palette": [
+				{ "slug": "ink", "name": "Чернила", "color": "#141c2b" },
+				{ "slug": "paper", "name": "Бумага", "color": "#f4efe6" },
+				{ "slug": "navy", "name": "Флот", "color": "#16233a" },
+				{ "slug": "signal", "name": "Сигнал", "color": "#861f32" },
+				{ "slug": "bronze", "name": "Память", "color": "#b08a4a" },
+				{ "slug": "mist", "name": "Туман", "color": "#e7e1d6" },
+				{ "slug": "muted", "name": "Приглушённый", "color": "#5d6470" }
+			]
+		},
+		"typography": {
+			"fluid": true,
+			"fontFamilies": [
+				{
+					"slug": "display",
+					"name": "Display",
+					"fontFamily": "\"Cormorant Garamond\", \"PT Serif\", Georgia, serif"
+				},
+				{
+					"slug": "body",
+					"name": "Body",
+					"fontFamily": "Manrope, Arial, sans-serif"
+				}
+			],
+			"fontSizes": [
+				{ "slug": "small", "size": "0.86rem", "name": "Small", "fluid": { "min": "0.8rem", "max": "0.92rem" } },
+				{ "slug": "medium", "size": "1.05rem", "name": "Medium", "fluid": { "min": "1rem", "max": "1.12rem" } },
+				{ "slug": "large", "size": "1.45rem", "name": "Large", "fluid": { "min": "1.2rem", "max": "1.6rem" } },
+				{ "slug": "x-large", "size": "2.4rem", "name": "XL", "fluid": { "min": "1.7rem", "max": "2.8rem" } },
+				{ "slug": "xx-large", "size": "4.5rem", "name": "Display", "fluid": { "min": "2.6rem", "max": "5.4rem" } }
+			]
+		},
+		"spacing": {
+			"spacingScale": { "steps": 7 }
+		}
+	},
+	"styles": {
+		"color": {
+			"background": "var(--wp--preset--color--paper)",
+			"text": "var(--wp--preset--color--ink)"
+		},
+		"typography": {
+			"fontFamily": "var(--wp--preset--font-family--body)",
+			"fontSize": "var(--wp--preset--font-size--medium)",
+			"lineHeight": "1.65"
+		},
+		"elements": {
+			"heading": {
+				"typography": {
+					"fontFamily": "var(--wp--preset--font-family--display)",
+					"fontWeight": "500",
+					"lineHeight": "1.1"
+				}
+			},
+			"link": {
+				"color": { "text": "inherit" }
+			},
+			"button": {
+				"color": {
+					"background": "var(--wp--preset--color--signal)",
+					"text": "#fffdfa"
+				},
+				"border": { "radius": "2px" }
+			}
+		}
+	},
+	"templateParts": [
+		{ "name": "header", "title": "Шапка", "area": "header" },
+		{ "name": "footer", "title": "Подвал", "area": "footer" }
+	]
+}

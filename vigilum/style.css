@@ -1,0 +1,18 @@
+/*
+Theme Name: Vigilum
+Theme URI: https://github.com/
+Author: Vigilum
+Description: Гибкий журнальный шаблон антитеррора для последней версии WordPress. Собирает журнальную архитектуру JournalX и академическую дизайн-систему Фонда Шевякова: публикации, память героев и фонд гражданских инициатив с голосованием. UX/UI 2027 — fluid type, OKLCH, glass chrome, dark mode.
+Requires at least: 6.4
+Tested up to: 6.8
+Requires PHP: 8.1
+Version: 1.0.0
+License: GNU General Public License v2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: vigilum
+Tags: magazine, news, custom-logo, custom-menu, featured-images, threaded-comments, translation-ready, block-styles, wide-blocks, full-site-editing
+
+Vigilum is a standalone hybrid theme. It does not require JournalX or Root as a parent.
+*/
+
+/* Front-end styles live in assets/css/main.css — this file is the theme identity. */

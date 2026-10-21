@@ -1,0 +1,25 @@
+body {
+  font-family: Manrope, Arial, sans-serif;
+  background: #f4efe6;
+  color: #141c2b;
+}
+
+.editor-styles-wrapper h1,
+.editor-styles-wrapper h2,
+.editor-styles-wrapper h3,
+.wp-block-heading {
+  font-family: "Cormorant Garamond", "PT Serif", Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+}
+
+.editor-styles-wrapper {
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+.wp-block-quote {
+  border-left: 2px solid #861f32;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+}
