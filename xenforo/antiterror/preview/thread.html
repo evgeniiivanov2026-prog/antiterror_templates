@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#0e1626">
+	<title>Контур — куда сообщать</title>
+	<link rel="icon" href="../assets/mark.svg">
+	<link rel="stylesheet" href="skeleton.css">
+	<link rel="stylesheet" href="extra.css">
+</head>
+<body data-template="thread_view">
+<div class="p-pageWrapper">
+	<div class="p-staffBar">
+		<div class="p-staffBar-inner">
+			<a href="index.html#rules">На одобрение</a>
+			<a href="index.html#rules">Журнал модерации</a>
+		</div>
+	</div>
+	<header class="p-header" id="header">
+		<div class="p-header-inner">
+			<div class="p-header-content">
+				<div class="p-header-logo p-header-logo--text">
+					<a href="index.html">Контур</a>
+				</div>
+			</div>
+		</div>
+	</header>
+	<nav class="p-nav" aria-label="Разделы">
+		<div class="p-nav-inner">
+			<button class="p-nav-menuTrigger" type="button" aria-expanded="false" aria-controls="navList">
+				<span class="at-burger" aria-hidden="true"></span>
+				<span class="u-srOnly">Меню</span>
+			</button>
+			<div class="p-nav-scroller">
+				<ul class="p-nav-list" id="navList">
+					<li class="p-navEl is-selected"><a class="p-navEl-link" href="index.html">Форумы</a></li>
+					<li class="p-navEl"><a class="p-navEl-link" href="thread.html" aria-current="page">Что нового</a></li>
+					<li class="p-navEl"><a class="p-navEl-link" href="index.html#rules">Правила</a></li>
+					<li class="p-navEl"><a class="p-navEl-link" href="index.html#sources">Источники</a></li>
+				</ul>
+			</div>
+			<div class="p-nav-opposite">
+				<div class="p-navgroup">
+					<a class="p-navgroup-link" href="index.html#sources"><span class="p-navgroup-linkText">Поиск</span></a>
+					<a class="p-navgroup-link" href="#reply"><span class="p-navgroup-linkText">Соколова</span></a>
+					<a class="p-navgroup-link" href="#posts">
+						<span class="p-navgroup-linkText">Оповещения</span>
+						<span class="badge badge--highlighted" aria-label="2 новых">2</span>
+					</a>
+				</div>
+			</div>
+		</div>
+	</nav>
+	<div class="p-body">
+		<div class="p-body-inner">
+			<ul class="p-breadcrumbs">
+				<li><a href="index.html">Форумы</a></li>
+				<li><a href="index.html#prevent">Профилактика</a></li>
+				<li><a href="thread.html">Признаки вербовки</a></li>
+			</ul>
+			<header class="p-body-header">
+				<div class="p-title">
+					<h1 class="p-title-value"><span class="label">Разъяснение</span> Куда направлять сообщение о признаках вербовки</h1>
+					<p class="p-description">Открытая памятка. В теме нет инструкций, как проверять человека самостоятельно.</p>
+				</div>
+				<div class="p-title-pageAction">
+					<a class="button button--primary" href="#reply">Ответить</a>
+				</div>
+			</header>
+			<div class="p-body-main">
+				<div class="p-body-content">
+					<nav class="pageNavWrapper" aria-label="Страницы">
+						<div class="pageNav">
+							<ul class="pageNav-main">
+								<li class="pageNav-page pageNav-page--current"><a href="thread.html" aria-current="page">1</a></li>
+								<li class="pageNav-page"><a href="#reply">2</a></li>
+								<li class="pageNav-page"><a href="#reply">3</a></li>
+							</ul>
+							<a class="pageNav-jump pageNav-jump--next" href="#reply">Дальше</a>
+						</div>
+					</nav>
+					<div class="block block--messages" id="posts">
+						<div class="block-container">
+							<div class="block-body">
+								<article class="message message--post" id="post-1">
+									<div class="message-inner">
+										<div class="message-cell message-cell--user">
+											<section class="message-user">
+												<div class="message-avatar"><a class="avatar avatar--m" href="#post-1" aria-hidden="true">РК</a></div>
+												<div class="message-userDetails">
+													<h4 class="message-name"><a href="#post-1">Редактор контура</a></h4>
+													<h5 class="message-userTitle">Редакция</h5>
+													<div class="userBanner">Состав</div>
+												</div>
+											</section>
+										</div>
+										<div class="message-cell message-cell--main">
+											<header class="message-attribution">
+												<a class="message-attribution-main" href="#post-1"><time datetime="2026-10-22T15:40:00+03:00">22 октября 2026, 15:40</time></a>
+												<ul class="message-attribution-opposite"><li><a href="#post-1">#1</a></li></ul>
+											</header>
+											<div class="message-body">
+												<div class="bbWrapper">
+													<p>Если вы заметили давление, попытку вовлечь в насилие или призывы к нему, не выясняйте детали самостоятельно и не собирайте «доказательства» у этого человека.</p>
+													<h2>Куда сообщить</h2>
+													<ul>
+														<li>В полицию — лично или через официальный канал ведомства.</li>
+														<li>По номеру 112, если помощь нужна сейчас.</li>
+														<li>Руководству школы, площадки или перевозчика, если ситуация у них, — параллельно с сообщением в полицию, а не вместо него.</li>
+													</ul>
+													<blockquote class="bbCodeBlock bbCodeBlock--quote">
+														<div class="bbCodeBlock-title">Памятка редакции</div>
+														<div class="bbCodeBlock-content">Форум хранит только открытые разъяснения. Закрытые планы, схемы объектов и описания уязвимостей удаляются.</div>
+													</blockquote>
+													<p>Дальше в теме можно оставлять ссылки на официальные публикации. Текст закона не копируйте целиком: достаточно названия и адреса страницы источника.</p>
+												</div>
+											</div>
+											<div class="message-signature">Публикую только ссылки на официальные тексты.</div>
+											<footer class="message-footer">
+												<div class="reactionsBar">Отметили как полезное: 6</div>
+												<div class="message-actionBar">
+													<div class="actionBar-set actionBar-set--external">
+														<a class="actionBar-action" href="#reply">Ответить</a>
+														<a class="actionBar-action" href="#post-1">Ссылка</a>
+													</div>
+												</div>
+											</footer>
+										</div>
+									</div>
+								</article>
+								<article class="message message--post" id="post-2">
+									<div class="message-inner">
+										<div class="message-cell message-cell--user">
+											<section class="message-user">
+												<div class="message-avatar"><a class="avatar avatar--m" href="#post-2" aria-hidden="true">МС</a></div>
+												<div class="message-userDetails">
+													<h4 class="message-name"><a href="#post-2">Марина Соколова</a></h4>
+													<h5 class="message-userTitle">Участник</h5>
+												</div>
+											</section>
+										</div>
+										<div class="message-cell message-cell--main">
+											<header class="message-attribution">
+												<a class="message-attribution-main" href="#post-2"><time datetime="2026-10-22T16:05:00+03:00">22 октября 2026, 16:05</time></a>
+												<ul class="message-attribution-opposite"><li><a href="#post-2">#2</a></li></ul>
+											</header>
+											<div class="message-body">
+												<div class="bbWrapper">
+													<p>Можно ли выложить на форум план безопасности школы, чтобы родители видели маршруты?</p>
+													<p>И второй вопрос: если памятка уже висит на сайте округа, достаточно ли здесь короткой ссылки?</p>
+												</div>
+											</div>
+											<footer class="message-footer">
+												<div class="message-actionBar">
+													<div class="actionBar-set">
+														<a class="actionBar-action" href="#reply">Ответить</a>
+													</div>
+												</div>
+											</footer>
+										</div>
+									</div>
+								</article>
+								<article class="message message--post" id="post-3">
+									<div class="message-inner">
+										<div class="message-cell message-cell--user">
+											<section class="message-user">
+												<div class="message-avatar"><a class="avatar avatar--m" href="#post-3" aria-hidden="true">ИВ</a></div>
+												<div class="message-userDetails">
+													<h4 class="message-name"><a href="#post-3">Илья Воронов</a></h4>
+													<h5 class="message-userTitle">Участник</h5>
+												</div>
+											</section>
+										</div>
+										<div class="message-cell message-cell--main">
+											<header class="message-attribution">
+												<a class="message-attribution-main" href="#post-3"><time datetime="2026-10-22T16:22:00+03:00">22 октября 2026, 16:22</time></a>
+												<ul class="message-attribution-opposite"><li><a href="#post-3">#3</a></li></ul>
+											</header>
+											<div class="message-body">
+												<div class="bbWrapper">
+													<p>План безопасности школы на форум загружать не нужно: это внутренний документ площадки. Родителям достаточно публичной памятки — куда звонить и кто встречает детей при сигнале, — если такую памятку уже утвердили и выложили официально.</p>
+													<p>Ссылки на сайт округа достаточно. Рядом напишите дату, на которую вы сверяли страницу.</p>
+												</div>
+											</div>
+											<footer class="message-footer">
+												<div class="message-actionBar">
+													<div class="actionBar-set">
+														<a class="actionBar-action" href="#reply">Ответить</a>
+													</div>
+												</div>
+											</footer>
+										</div>
+									</div>
+								</article>
+							</div>
+						</div>
+					</div>
+
+					<section class="block" id="reply">
+						<div class="block-container">
+							<h2 class="block-minorHeader">Ответить</h2>
+							<form class="block-body" action="#reply" method="get">
+								<div class="fr-box">
+									<div class="fr-toolbar" aria-hidden="true">B · I · ссылка · цитата</div>
+									<label class="u-srOnly" for="reply-body">Текст ответа</label>
+									<textarea class="input" id="reply-body" name="message" rows="6" placeholder="Коротко и со ссылкой на официальный источник"></textarea>
+								</div>
+								<div class="formSubmitRow">
+									<button class="button button--primary" type="submit">Ответить</button>
+									<button class="button" type="button">Предпросмотр</button>
+								</div>
+							</form>
+						</div>
+					</section>
+
+					<section class="block" aria-labelledby="similar">
+						<div class="block-container">
+							<h2 class="block-minorHeader" id="similar">Похожие темы</h2>
+							<div class="block-body">
+								<div class="structItem structItem--thread is-unread">
+									<div class="structItem-cell structItem-cell--icon">
+										<a class="avatar avatar--xs" href="index.html#ready" aria-hidden="true">МС</a>
+									</div>
+									<div class="structItem-cell structItem-cell--main">
+										<div class="structItem-title"><a href="index.html#ready"><span class="label label--green">Памятка</span>Памятка для родителей на собрании</a></div>
+										<ul class="structItem-parts">
+											<li><a href="index.html#ready">Марина Соколова</a></li>
+											<li><time datetime="2026-10-20T19:15:00+03:00">20 октября</time></li>
+										</ul>
+									</div>
+									<div class="structItem-cell structItem-cell--meta">
+										<dl class="pairs"><dt>Ответы</dt><dd>11</dd></dl>
+									</div>
+									<div class="structItem-cell structItem-cell--latest">
+										<a href="index.html#ready">Илья Воронов</a>
+										<div class="structItem-minor"><time datetime="2026-10-21T09:12:00+03:00">21 октября, 09:12</time></div>
+									</div>
+								</div>
+								<div class="structItem structItem--thread is-sticky">
+									<div class="structItem-cell structItem-cell--icon">
+										<a class="avatar avatar--xs" href="index.html#rules" aria-hidden="true">РК</a>
+									</div>
+									<div class="structItem-cell structItem-cell--main">
+										<div class="structItem-title"><a href="index.html#rules"><span class="label label--red">Правила</span>Что нельзя публиковать в контуре</a></div>
+										<ul class="structItem-parts">
+											<li><a href="index.html#rules">Редактор контура</a></li>
+											<li><time datetime="2026-09-02T10:00:00+03:00">2 сентября</time></li>
+										</ul>
+									</div>
+									<div class="structItem-cell structItem-cell--meta">
+										<dl class="pairs"><dt>Ответы</dt><dd>4</dd></dl>
+									</div>
+									<div class="structItem-cell structItem-cell--latest">
+										<a href="index.html#rules">Редактор контура</a>
+										<div class="structItem-minor"><time datetime="2026-10-01T12:00:00+03:00">1 октября, 12:00</time></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</section>
+				</div>
+				<aside class="p-body-sidebar" aria-label="Сводка">
+					<div class="block">
+						<div class="block-container">
+							<h3 class="block-minorHeader">Сообщение</h3>
+							<div class="block-body block-row">
+								<p class="sidebar-note">Срочный сигнал не оставляйте ответом в теме.</p>
+								<a class="button button--primary" href="index.html#report">Куда звонить</a>
+							</div>
+						</div>
+					</div>
+					<div class="block">
+						<div class="block-container">
+							<h3 class="block-minorHeader">В этом разделе</h3>
+							<div class="block-body block-row">
+								<div class="contentRow">
+									<div class="contentRow-main">
+										<h4 class="contentRow-header"><a href="index.html#prevent">Признаки вербовки</a></h4>
+										<div class="contentRow-minor">12 тем</div>
+									</div>
+								</div>
+								<div class="contentRow">
+									<div class="contentRow-main">
+										<h4 class="contentRow-header"><a href="index.html#prevent">Учреждения и транспорт</a></h4>
+										<div class="contentRow-minor">9 тем</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</aside>
+			</div>
+		</div>
+	</div>
+	<footer class="p-footer">
+		<div class="p-footer-inner">
+			<ul class="p-footer-linkList">
+				<li><a href="index.html">Форумы</a></li>
+				<li><a href="index.html#rules">Правила</a></li>
+				<li><a href="#reply">Ответить</a></li>
+			</ul>
+			<div class="p-footer-copyright">Макет стиля «Контур» для XenForo. Не является сайтом государственного органа. Тексты сообщений демонстрационные.</div>
+		</div>
+	</footer>
+</div>
+<script src="site.js"></script>
+</body>
+</html>

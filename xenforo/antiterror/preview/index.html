@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#0e1626">
+	<title>Контур — форумы</title>
+	<link rel="icon" href="../assets/mark.svg">
+	<link rel="stylesheet" href="skeleton.css">
+	<link rel="stylesheet" href="extra.css">
+</head>
+<body data-template="forum_list">
+<div class="p-pageWrapper">
+	<div class="p-staffBar">
+		<div class="p-staffBar-inner">
+			<a href="#rules">На одобрение</a>
+			<a href="#rules">Журнал модерации</a>
+		</div>
+	</div>
+	<header class="p-header" id="header">
+		<div class="p-header-inner">
+			<div class="p-header-content">
+				<div class="p-header-logo p-header-logo--text">
+					<a href="index.html">Контур</a>
+				</div>
+			</div>
+		</div>
+	</header>
+	<nav class="p-nav" aria-label="Разделы">
+		<div class="p-nav-inner">
+			<button class="p-nav-menuTrigger" type="button" aria-expanded="false" aria-controls="navList">
+				<span class="at-burger" aria-hidden="true"></span>
+				<span class="u-srOnly">Меню</span>
+			</button>
+			<div class="p-nav-scroller">
+				<ul class="p-nav-list" id="navList">
+					<li class="p-navEl is-selected"><a class="p-navEl-link" href="index.html" aria-current="page">Форумы</a></li>
+					<li class="p-navEl"><a class="p-navEl-link" href="thread.html">Что нового</a></li>
+					<li class="p-navEl"><a class="p-navEl-link" href="#rules">Правила</a></li>
+					<li class="p-navEl"><a class="p-navEl-link" href="#sources">Источники</a></li>
+				</ul>
+			</div>
+			<div class="p-nav-opposite">
+				<div class="p-navgroup">
+					<a class="p-navgroup-link p-navgroup-link--search" href="#sources"><span class="p-navgroup-linkText">Поиск</span></a>
+					<a class="p-navgroup-link" href="thread.html"><span class="p-navgroup-linkText">Соколова</span></a>
+					<a class="p-navgroup-link p-navgroup-link--alerts" href="thread.html">
+						<span class="p-navgroup-linkText">Оповещения</span>
+						<span class="badge badge--highlighted" aria-label="2 новых">2</span>
+					</a>
+				</div>
+			</div>
+		</div>
+	</nav>
+	<div class="p-body">
+		<div class="p-body-inner">
+			<ul class="p-breadcrumbs">
+				<li><span>Форумы</span></li>
+			</ul>
+			<div class="p-body-main">
+				<div class="p-body-content">
+					<div class="blockMessage blockMessage--important" id="report">
+						Здесь только открытые материалы: куда сообщить и какие документы можно цитировать. Схемы объектов, закрытые планы и описания уязвимостей не публикуются. О готовящемся преступлении сообщайте в полицию или по номеру 112.
+					</div>
+
+					<section class="block block--category" id="official" aria-labelledby="cat-official">
+						<div class="block-container">
+							<h2 class="block-header" id="cat-official">
+								<a href="#official">Официальный контур</a>
+								<span class="block-desc">Публичные документы и сообщения комиссий</span>
+							</h2>
+							<div class="block-body">
+								<div class="node node--forum">
+									<div class="node-body">
+										<span class="node-icon" aria-hidden="true"><i><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></i></span>
+										<div class="node-main">
+											<h3 class="node-title"><a href="#law">Правовая база</a></h3>
+											<div class="node-description">Нормативные акты и официальные разъяснения со ссылкой на источник.</div>
+											<div class="node-meta">
+												<div class="node-subNodes">
+													<a class="subNodeLink" href="#law">Федеральный закон</a>
+													<a class="subNodeLink" href="#law">Разъяснения</a>
+												</div>
+												<div class="node-statsMeta">18 тем · 96 сообщений</div>
+											</div>
+										</div>
+										<div class="node-stats">
+											<dl class="pairs"><dt>Темы</dt><dd>18</dd></dl>
+											<dl class="pairs"><dt>Сообщения</dt><dd>96</dd></dl>
+										</div>
+										<div class="node-extra">
+											<div class="node-extra-row"><a class="node-extra-title" href="#law">Что остаётся в открытом доступе</a></div>
+											<div class="node-extra-row"><time datetime="2026-10-18T11:20:00+03:00">18 октября, 11:20</time></div>
+										</div>
+									</div>
+								</div>
+								<div class="node node--forum node--unread">
+									<div class="node-body">
+										<span class="node-icon" aria-hidden="true"><i><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></i></span>
+										<div class="node-main">
+											<h3 class="node-title"><a href="thread.html">Сообщения комиссий</a></h3>
+											<div class="node-description">Публичные материалы антитеррористических комиссий. Служебные приложения не переносятся на форум.</div>
+											<div class="node-statsMeta">7 тем · 41 сообщение</div>
+										</div>
+										<div class="node-stats">
+											<dl class="pairs"><dt>Темы</dt><dd>7</dd></dl>
+											<dl class="pairs"><dt>Сообщения</dt><dd>41</dd></dl>
+										</div>
+										<div class="node-extra">
+											<div class="node-extra-row"><a class="node-extra-title" href="thread.html">Повестка открытого заседания</a></div>
+											<div class="node-extra-row"><time datetime="2026-10-21T16:05:00+03:00">21 октября, 16:05</time></div>
+										</div>
+									</div>
+								</div>
+								<div class="node node--forum">
+									<div class="node-body">
+										<span class="node-icon" aria-hidden="true"><i><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></i></span>
+										<div class="node-main">
+											<h3 class="node-title"><a href="#official">Хроника открытых мер</a></h3>
+											<div class="node-description">Сообщения о публично объявленных режимах и учениях, без карт объектов.</div>
+											<div class="node-statsMeta">4 темы · 15 сообщений</div>
+										</div>
+										<div class="node-stats">
+											<dl class="pairs"><dt>Темы</dt><dd>4</dd></dl>
+											<dl class="pairs"><dt>Сообщения</dt><dd>15</dd></dl>
+										</div>
+										<div class="node-extra">
+											<div class="node-extra-row"><a class="node-extra-title" href="#official">Где читать официальное оповещение</a></div>
+											<div class="node-extra-row"><time datetime="2026-10-12T09:00:00+03:00">12 октября, 09:00</time></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</section>
+
+					<section class="block block--category" id="prevent" aria-labelledby="cat-prevent">
+						<div class="block-container">
+							<h2 class="block-header" id="cat-prevent">
+								<a href="#prevent">Профилактика</a>
+								<span class="block-desc">Как заметить давление и куда обратиться</span>
+							</h2>
+							<div class="block-body">
+								<div class="node node--forum node--unread">
+									<div class="node-body">
+										<span class="node-icon" aria-hidden="true"><i><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></i></span>
+										<div class="node-main">
+											<h3 class="node-title"><a href="thread.html">Признаки вербовки</a></h3>
+											<div class="node-description">Общие признаки давления и канал сообщения. Без самостоятельного выяснения деталей.</div>
+											<div class="node-statsMeta">12 тем · 64 сообщения</div>
+										</div>
+										<div class="node-stats">
+											<dl class="pairs"><dt>Темы</dt><dd>12</dd></dl>
+											<dl class="pairs"><dt>Сообщения</dt><dd>64</dd></dl>
+										</div>
+										<div class="node-extra">
+											<div class="node-extra-row"><a class="node-extra-title" href="thread.html">Куда направлять сообщение о признаках вербовки</a></div>
+											<div class="node-extra-row"><time datetime="2026-10-22T15:40:00+03:00">22 октября, 15:40</time></div>
+										</div>
+									</div>
+								</div>
+								<div class="node node--forum">
+									<div class="node-body">
+										<span class="node-icon" aria-hidden="true"><i><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></i></span>
+										<div class="node-main">
+											<h3 class="node-title"><a href="#prevent">Учреждения и транспорт</a></h3>
+											<div class="node-description">Открытые памятки для администраций. Внутренние инструкции площадок остаются у них.</div>
+											<div class="node-statsMeta">9 тем · 33 сообщения</div>
+										</div>
+										<div class="node-stats">
+											<dl class="pairs"><dt>Темы</dt><dd>9</dd></dl>
+											<dl class="pairs"><dt>Сообщения</dt><dd>33</dd></dl>
+										</div>
+										<div class="node-extra">
+											<div class="node-extra-row"><a class="node-extra-title" href="#prevent">Что можно вывесить в вестибюле</a></div>
+											<div class="node-extra-row"><time datetime="2026-10-19T13:10:00+03:00">19 октября, 13:10</time></div>
+										</div>
+									</div>
+								</div>
+								<div class="node node--forum">
+									<div class="node-body">
+										<span class="node-icon" aria-hidden="true"><i><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></i></span>
+										<div class="node-main">
+											<h3 class="node-title"><a href="#prevent">Массовые мероприятия</a></h3>
+											<div class="node-description">Как заранее сообщить посетителям, куда обращаться, если что-то настораживает.</div>
+											<div class="node-statsMeta">6 тем · 22 сообщения</div>
+										</div>
+										<div class="node-stats">
+											<dl class="pairs"><dt>Темы</dt><dd>6</dd></dl>
+											<dl class="pairs"><dt>Сообщения</dt><dd>22</dd></dl>
+										</div>
+										<div class="node-extra">
+											<div class="node-extra-row"><a class="node-extra-title" href="#prevent">Текст объявления для афиши</a></div>
+											<div class="node-extra-row"><time datetime="2026-10-09T18:40:00+03:00">9 октября, 18:40</time></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</section>
+
+					<section class="block block--category" id="ready" aria-labelledby="cat-ready">
+						<div class="block-container">
+							<h2 class="block-header" id="cat-ready">
+								<a href="#ready">Гражданская готовность</a>
+								<span class="block-desc">Сигналы, эвакуация, учёт инструктажей</span>
+							</h2>
+							<div class="block-body">
+								<div class="node node--forum">
+									<div class="node-body">
+										<span class="node-icon" aria-hidden="true"><i><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></i></span>
+										<div class="node-main">
+											<h3 class="node-title"><a href="#ready">Сигналы оповещения</a></h3>
+											<div class="node-description">Что означает сигнал и какой официальный канал слушать. Частоты закрытой связи не указываются.</div>
+											<div class="node-statsMeta">5 тем · 19 сообщений</div>
+										</div>
+										<div class="node-stats">
+											<dl class="pairs"><dt>Темы</dt><dd>5</dd></dl>
+											<dl class="pairs"><dt>Сообщения</dt><dd>19</dd></dl>
+										</div>
+										<div class="node-extra">
+											<div class="node-extra-row"><a class="node-extra-title" href="#ready">Где проверить, что оповещение официальное</a></div>
+											<div class="node-extra-row"><time datetime="2026-10-15T08:30:00+03:00">15 октября, 08:30</time></div>
+										</div>
+									</div>
+								</div>
+								<div class="node node--forum node--unread">
+									<div class="node-body">
+										<span class="node-icon" aria-hidden="true"><i><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></i></span>
+										<div class="node-main">
+											<h3 class="node-title"><a href="#ready">Поведение при эвакуации</a></h3>
+											<div class="node-description">Общие правила для людей: слушать распоряжение, не возвращаться за вещами, помочь тем, кому трудно идти.</div>
+											<div class="node-statsMeta">8 тем · 47 сообщений</div>
+										</div>
+										<div class="node-stats">
+											<dl class="pairs"><dt>Темы</dt><dd>8</dd></dl>
+											<dl class="pairs"><dt>Сообщения</dt><dd>47</dd></dl>
+										</div>
+										<div class="node-extra">
+											<div class="node-extra-row"><a class="node-extra-title" href="#ready">Памятка для родителей на собрании</a></div>
+											<div class="node-extra-row"><time datetime="2026-10-20T19:15:00+03:00">20 октября, 19:15</time></div>
+										</div>
+									</div>
+								</div>
+								<div class="node node--forum">
+									<div class="node-body">
+										<span class="node-icon" aria-hidden="true"><i><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></i></span>
+										<div class="node-main">
+											<h3 class="node-title"><a href="#ready">Подготовка персонала</a></h3>
+											<div class="node-description">Как вести учёт инструктажей. Сами закрытые планы на форум не загружаются.</div>
+											<div class="node-statsMeta">3 темы · 11 сообщений</div>
+										</div>
+										<div class="node-stats">
+											<dl class="pairs"><dt>Темы</dt><dd>3</dd></dl>
+											<dl class="pairs"><dt>Сообщения</dt><dd>11</dd></dl>
+										</div>
+										<div class="node-extra">
+											<div class="node-extra-row"><a class="node-extra-title" href="#ready">Журнал без содержания плана</a></div>
+											<div class="node-extra-row"><time datetime="2026-10-04T12:00:00+03:00">4 октября, 12:00</time></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</section>
+
+					<section class="block" id="rules">
+						<div class="block-container">
+							<h2 class="block-minorHeader">Правила контура</h2>
+							<div class="block-body block-row">
+								<ul>
+									<li>Не публикуйте схемы объектов, закрытые планы и описания уязвимостей.</li>
+									<li>Не обсуждайте способы нападения и изготовления средств поражения.</li>
+									<li>О готовящемся преступлении пишите не в тему, а в полицию или на номер 112.</li>
+									<li>Официальный текст цитируйте коротко и давайте ссылку на источник.</li>
+								</ul>
+							</div>
+						</div>
+					</section>
+				</div>
+				<aside class="p-body-sidebar" aria-label="Сводка">
+					<div class="block" id="sources">
+						<div class="block-container">
+							<h3 class="block-minorHeader">Сообщение</h3>
+							<div class="block-body block-row">
+								<p class="sidebar-note">Если видите давление или призыв к насилию, не выясняйте детали сами.</p>
+								<a class="button button--primary" href="thread.html">Как сообщить</a>
+							</div>
+						</div>
+					</div>
+					<div class="block">
+						<div class="block-container">
+							<h3 class="block-minorHeader">Официальные источники</h3>
+							<div class="block-body block-row">
+								<div class="contentRow">
+									<div class="contentRow-main">
+										<h4 class="contentRow-header"><a href="http://nac.gov.ru/" target="_blank" rel="noopener">Национальный антитеррористический комитет</a></h4>
+										<div class="contentRow-minor">nac.gov.ru</div>
+									</div>
+								</div>
+								<div class="contentRow">
+									<div class="contentRow-main">
+										<h4 class="contentRow-header"><a href="https://www.mchs.gov.ru/" target="_blank" rel="noopener">МЧС России</a></h4>
+										<div class="contentRow-minor">mchs.gov.ru</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="block">
+						<div class="block-container">
+							<h3 class="block-minorHeader">Последние материалы</h3>
+							<div class="block-body block-row">
+								<div class="contentRow">
+									<a class="avatar avatar--xs" href="thread.html" aria-hidden="true">МС</a>
+									<div class="contentRow-main">
+										<h4 class="contentRow-header"><a href="thread.html">Куда направлять сообщение о признаках вербовки</a></h4>
+										<div class="contentRow-minor">22 октября, 15:40</div>
+									</div>
+								</div>
+								<div class="contentRow">
+									<a class="avatar avatar--xs" href="#official" aria-hidden="true">ИВ</a>
+									<div class="contentRow-main">
+										<h4 class="contentRow-header"><a href="#official">Повестка открытого заседания</a></h4>
+										<div class="contentRow-minor">21 октября, 16:05</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</aside>
+			</div>
+		</div>
+	</div>
+	<footer class="p-footer">
+		<div class="p-footer-inner">
+			<ul class="p-footer-linkList">
+				<li><a href="index.html">Форумы</a></li>
+				<li><a href="#rules">Правила</a></li>
+				<li><a href="#sources">Источники</a></li>
+				<li><a href="thread.html">Свежая тема</a></li>
+			</ul>
+			<div class="p-footer-copyright">Макет стиля «Контур» для XenForo. Не является сайтом государственного органа. Названия разделов и сообщения демонстрационные.</div>
+		</div>
+	</footer>
+</div>
+<script src="site.js"></script>
+</body>
+</html>

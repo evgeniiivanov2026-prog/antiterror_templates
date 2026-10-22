@@ -1,0 +1,62 @@
+/* Только каркас превью. В XenForo эту раскладку даёт ядро, не extra.less. */
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; }
+.u-srOnly {
+	position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+	overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+.p-staffBar-inner,
+.p-header-inner,
+.p-nav-inner,
+.p-body-inner,
+.p-footer-inner {
+	margin-left: auto;
+	margin-right: auto;
+	padding-left: 20px;
+	padding-right: 20px;
+}
+.p-nav-inner,
+.p-nav-scroller,
+.p-nav-list,
+.p-nav-opposite,
+.p-navgroup { display: flex; align-items: center; }
+.p-nav-scroller { flex: 1 1 auto; min-width: 0; align-self: stretch; }
+.p-nav-list { align-items: stretch; margin: 0; padding: 0; list-style: none; }
+.p-nav { position: relative; }
+.p-nav-menuTrigger {
+	display: none; width: 44px; height: 44px; align-items: center; justify-content: center;
+	border: 0; background: transparent; color: #f6f1e7; cursor: pointer; padding: 0;
+}
+.at-burger, .at-burger::before, .at-burger::after {
+	display: block; width: 18px; height: 1.5px; background: currentColor; position: relative;
+}
+.at-burger::before, .at-burger::after { content: ""; position: absolute; left: 0; }
+.at-burger::before { top: -6px; }
+.at-burger::after { top: 6px; }
+body.is-menuOpen .at-burger { background: transparent; }
+body.is-menuOpen .at-burger::before { top: 0; transform: rotate(45deg); }
+body.is-menuOpen .at-burger::after { top: 0; transform: rotate(-45deg); }
+.node-stats { display: flex; }
+.node-statsMeta { display: none; }
+.structItem-parts { margin: 0; padding: 0; }
+.pairs { margin: 0; }
+dd { margin-left: 0; }
+button, textarea { font: inherit; }
+textarea.input { display: block; width: 100%; min-height: 140px; padding: 12px; resize: vertical; }
+.p-navgroup-link .badge { margin-left: 4px; padding: 0 5px; min-width: 18px; line-height: 18px; text-align: center; }
+
+@media (max-width: 900px) {
+	.node-extra { display: none; }
+}
+@media (max-width: 650px) {
+	.p-nav-menuTrigger { display: inline-flex; }
+	.p-nav-list { display: none; }
+	.p-navgroup-linkText { display: none; }
+	body.is-menuOpen .p-nav-list {
+		display: flex; flex-direction: column; position: absolute; z-index: 30;
+		left: 0; right: 0; top: 100%; margin: 0; background: #0e1626;
+		border-bottom: 2px solid #e2c78a; padding: 6px 0 12px;
+	}
+	.node-stats, .structItem-cell--meta, .structItem-cell--latest { display: none; }
+	.node-statsMeta { display: block; }
+}
