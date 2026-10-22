@@ -1,0 +1,16 @@
+/*
+Theme Name: Вестник антитеррора
+Theme URI: https://example.com/atjournal
+Author: Вестник антитеррора
+Description: Гибкий журнальный шаблон: материалы, память героев антитеррора и фонд инициатив с открытым голосованием читателей. Самостоятельная тема для актуального WordPress — журнальная сетка и гражданская редактура, без родительских тем.
+Version: 1.0.0
+Requires at least: 6.5
+Tested up to: 7.1
+Requires PHP: 8.0
+License: GNU General Public License v2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: atjournal
+Tags: blog, news, custom-logo, custom-menu, featured-images, threaded-comments, translation-ready, editor-style, block-styles, wide-blocks, one-column, two-columns
+*/
+
+/* Стили собраны в assets/css/theme.css и подключаются из functions.php. */

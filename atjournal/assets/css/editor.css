@@ -1,0 +1,12 @@
+.editor-styles-wrapper {
+	font-family: Manrope, "Segoe UI", sans-serif;
+	background: #f3f0e8;
+	color: #1b2333;
+	line-height: 1.65;
+}
+
+.editor-styles-wrapper :is(h1, h2, h3, h4) {
+	font-family: "Source Serif 4", Georgia, serif;
+	letter-spacing: -0.03em;
+	line-height: 1.08;
+}

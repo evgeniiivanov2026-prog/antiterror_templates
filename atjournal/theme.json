@@ -1,0 +1,71 @@
+{
+	"$schema": "https://schemas.wp.org/wp/6.7/theme.json",
+	"version": 3,
+	"settings": {
+		"appearanceTools": true,
+		"layout": {
+			"contentSize": "720px",
+			"wideSize": "1180px"
+		},
+		"color": {
+			"palette": [
+				{ "slug": "paper", "name": "Бумага", "color": "#f3f0e8" },
+				{ "slug": "surface", "name": "Поверхность", "color": "#faf8f3" },
+				{ "slug": "ink", "name": "Чернила", "color": "#1b2333" },
+				{ "slug": "navy", "name": "Ночь", "color": "#141c2b" },
+				{ "slug": "muted", "name": "Сноска", "color": "#5c6573" },
+				{ "slug": "accent", "name": "Бордо", "color": "#7d2434" },
+				{ "slug": "line", "name": "Линия", "color": "#ddd6c8" },
+				{ "slug": "gold", "name": "Память", "color": "#d7c4a4" }
+			]
+		},
+		"typography": {
+			"fluid": true,
+			"fontFamilies": [
+				{
+					"slug": "display",
+					"name": "Source Serif 4",
+					"fontFamily": "\"Source Serif 4\", Georgia, serif"
+				},
+				{
+					"slug": "sans",
+					"name": "Manrope",
+					"fontFamily": "Manrope, \"Segoe UI\", sans-serif"
+				}
+			]
+		},
+		"spacing": {
+			"units": [ "px", "rem", "%" ]
+		},
+		"useRootPaddingAwareAlignments": true
+	},
+	"styles": {
+		"color": {
+			"background": "#f3f0e8",
+			"text": "#1b2333"
+		},
+		"typography": {
+			"fontFamily": "var(--wp--preset--font-family--sans)",
+			"fontSize": "1.05rem",
+			"lineHeight": "1.65"
+		},
+		"elements": {
+			"heading": {
+				"typography": {
+					"fontFamily": "var(--wp--preset--font-family--display)",
+					"lineHeight": "1.08"
+				}
+			},
+			"link": {
+				"color": { "text": "#1b2333" },
+				"typography": { "textDecoration": "underline" }
+			},
+			"button": {
+				"color": { "background": "#7d2434", "text": "#fffdf8" },
+				"border": { "radius": "2px" }
+			}
+		}
+	},
+	"templateParts": [],
+	"customTemplates": []
+}
