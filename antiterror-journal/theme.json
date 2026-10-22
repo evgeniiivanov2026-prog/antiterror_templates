@@ -1,0 +1,103 @@
+{
+	"$schema": "https://schemas.wp.org/wp/6.7/theme.json",
+	"version": 3,
+	"settings": {
+		"appearanceTools": true,
+		"layout": {
+			"contentSize": "760px",
+			"wideSize": "1240px"
+		},
+		"color": {
+			"defaultPalette": false,
+			"defaultGradients": false,
+			"defaultDuotone": false,
+			"palette": [
+				{ "slug": "paper", "color": "#f3efe6", "name": "Бумага" },
+				{ "slug": "surface", "color": "#faf7f2", "name": "Полоса" },
+				{ "slug": "ink", "color": "#161b24", "name": "Чернила" },
+				{ "slug": "muted", "color": "#4e5663", "name": "Сдержанный" },
+				{ "slug": "signal", "color": "#8d2436", "name": "Сигнал" },
+				{ "slug": "navy", "color": "#101826", "name": "Ночь" },
+				{ "slug": "bronze", "color": "#7a5428", "name": "Память" },
+				{ "slug": "cream", "color": "#f6e2d4", "name": "Тепло" }
+			]
+		},
+		"typography": {
+			"fluid": true,
+			"defaultFontSizes": false,
+			"fontFamilies": [
+				{
+					"slug": "display",
+					"name": "PT Serif",
+					"fontFamily": "\"PT Serif\", Georgia, serif"
+				},
+				{
+					"slug": "sans",
+					"name": "Manrope",
+					"fontFamily": "Manrope, sans-serif"
+				},
+				{
+					"slug": "mono",
+					"name": "IBM Plex Mono",
+					"fontFamily": "\"IBM Plex Mono\", ui-monospace, monospace"
+				}
+			],
+			"fontSizes": [
+				{ "slug": "small", "size": "0.84rem", "name": "Мелкий" },
+				{ "slug": "medium", "size": "1.0625rem", "name": "Текст" },
+				{ "slug": "large", "size": "1.35rem", "name": "Крупный" },
+				{ "slug": "x-large", "size": "2.4rem", "name": "Витрина" }
+			]
+		},
+		"spacing": {
+			"units": ["px", "rem", "%", "vw"]
+		},
+		"useRootPaddingAwareAlignments": false
+	},
+	"styles": {
+		"color": {
+			"background": "#f3efe6",
+			"text": "#161b24"
+		},
+		"typography": {
+			"fontFamily": "Manrope, sans-serif",
+			"fontSize": "1.0625rem",
+			"lineHeight": "1.65"
+		},
+		"spacing": {
+			"blockGap": "0px"
+		},
+		"elements": {
+			"heading": {
+				"typography": {
+					"fontFamily": "\"PT Serif\", Georgia, serif",
+					"fontWeight": "700",
+					"lineHeight": "1.08"
+				}
+			},
+			"link": {
+				"color": { "text": "#161b24" },
+				"typography": { "textDecoration": "underline" }
+			},
+			"button": {
+				"color": {
+					"background": "#8d2436",
+					"text": "#fffaf7"
+				},
+				"border": { "radius": "0px" },
+				"typography": { "fontWeight": "700" }
+			}
+		}
+	},
+	"templateParts": [
+		{ "name": "header", "title": "Шапка", "area": "header" },
+		{ "name": "footer", "title": "Подвал", "area": "footer" }
+	],
+	"customTemplates": [
+		{
+			"name": "page-journal",
+			"title": "Журнал",
+			"postTypes": ["page"]
+		}
+	]
+}
