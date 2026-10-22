@@ -1,0 +1,75 @@
+{
+	"$schema": "https://schemas.wp.org/wp/6.7/theme.json",
+	"version": 3,
+	"settings": {
+		"appearanceTools": true,
+		"layout": {
+			"contentSize": "72ch",
+			"wideSize": "1180px"
+		},
+		"color": {
+			"palette": [
+				{ "slug": "paper", "color": "#f3efe6", "name": "Бумага" },
+				{ "slug": "ink", "color": "#1c1915", "name": "Чернила" },
+				{ "slug": "signal", "color": "#7c2433", "name": "Сигнал" },
+				{ "slug": "navy", "color": "#171c27", "name": "Ночь" },
+				{ "slug": "support", "color": "#1f6b4a", "name": "Поддержка" },
+				{ "slug": "muted", "color": "#6d645b", "name": "Приглушённый" }
+			]
+		},
+		"typography": {
+			"fluid": true,
+			"fontFamilies": [
+				{
+					"slug": "display",
+					"name": "Source Serif 4",
+					"fontFamily": "\"Source Serif 4\", Palatino, \"Palatino Linotype\", Georgia, serif"
+				},
+				{
+					"slug": "body",
+					"name": "Manrope",
+					"fontFamily": "Manrope, \"Segoe UI\", sans-serif"
+				},
+				{
+					"slug": "mono",
+					"name": "IBM Plex Mono",
+					"fontFamily": "\"IBM Plex Mono\", ui-monospace, monospace"
+				}
+			]
+		},
+		"spacing": {
+			"units": [ "px", "rem", "vw", "%" ]
+		},
+		"useRootPaddingAwareAlignments": true
+	},
+	"styles": {
+		"color": {
+			"background": "var(--wp--preset--color--paper)",
+			"text": "var(--wp--preset--color--ink)"
+		},
+		"typography": {
+			"fontFamily": "var(--wp--preset--font-family--body)",
+			"fontSize": "1.05rem",
+			"lineHeight": "1.7"
+		},
+		"elements": {
+			"heading": {
+				"typography": {
+					"fontFamily": "var(--wp--preset--font-family--display)",
+					"fontWeight": "600",
+					"lineHeight": "1.12"
+				}
+			},
+			"link": {
+				"color": { "text": "var(--wp--preset--color--ink)" }
+			},
+			"button": {
+				"color": {
+					"background": "var(--wp--preset--color--signal)",
+					"text": "#fff8f6"
+				},
+				"border": { "radius": "0px" }
+			}
+		}
+	}
+}

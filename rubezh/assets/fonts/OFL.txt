@@ -1,0 +1,8 @@
+Шрифты распространяются по лицензии SIL Open Font License 1.1.
+https://openfontlicense.org
+
+- Manrope, автор Mikhail Sharanda
+- Source Serif 4, Adobe
+- IBM Plex Mono, IBM
+
+Файлы — подмножества woff2 (латиница и кириллица) из проекта Fontsource.

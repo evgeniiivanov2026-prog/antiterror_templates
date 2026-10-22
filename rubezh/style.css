@@ -1,0 +1,15 @@
+/*
+Theme Name: Рубеж
+Author: antiterror templates
+Description: Гибкий журнальный шаблон об антитерроре. Летопись, раздел памяти и фонд инициатив с открытым голосованием. Композиция опирается на журнальную сетку и спокойную гражданскую вёрстку, код родительских тем не используется.
+Version: 1.0.0
+Requires at least: 6.7
+Tested up to: 7.1
+Requires PHP: 8.0
+License: GNU General Public License v2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: rubezh
+Tags: news, blog, one-column, two-columns, custom-colors, custom-logo, custom-menu, editor-style, featured-images, threaded-comments, translation-ready, wide-blocks, block-styles
+*/
+
+/* Основная система: assets/css/main.css. Ниже можно дописать точечные правки сайта. */
