@@ -1,0 +1,19 @@
+/*
+Theme Name: Рубеж — Журнал антитеррора
+Theme URI: https://github.com/evgeniiivanov2026-prog/antiterror_templates
+Author: Рубеж
+Description: Профессиональный гибкий журнальный шаблон антитеррора для актуального WordPress. Скомпонован из журнальной архитектуры JournalX (мозаика выпусков, карточки разного масштаба, связанные материалы, мета публикации) и гражданской системы Root «Академический» (институциональная шапка, фонд, светлая/тёмная тема, миссия, обращение). Добавлены стена памяти героев и фонд инициатив с голосованием. UX/UI 2027: кинематографическая обложка, fluid-типографика, стекло-навигация, civic ballot.
+Version: 1.0.0
+Requires at least: 6.4
+Tested up to: 6.8
+Requires PHP: 7.4
+License: GNU General Public License v2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: rubezh
+Tags: journal, news, custom-logo, custom-menu, featured-images, threaded-comments, translation-ready, block-styles, editor-style, full-site-editing
+
+Рубеж не редактирует vendor JournalX и не является дочерней темой Root.
+Это самостоятельная тема: журнальный ритм + гражданский тон + память + инициативы.
+*/
+
+/* Tokens live in assets/css/main.css — this file is the WP theme header. */
