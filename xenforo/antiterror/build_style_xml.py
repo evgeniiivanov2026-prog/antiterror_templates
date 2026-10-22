@@ -95,11 +95,7 @@ def property_xml(row: tuple) -> str:
 def build_xml(less: str) -> str:
     if "]]>" in less:
         raise SystemExit("extra.less contains a CDATA terminator")
-    description = (
-        "Открытый форум по противодействию терроризму. "
-        "Тёмный служебный хром, бумажная колонка для чтения, латунь как служебный акцент "
-        "и малиновый сигнал только для действия."
-    )
+    description = "Тёмный хром, бумажная колонка, латунь и малиновый сигнал действия."
     props = "\n".join(property_xml(row) for row in PROPERTIES)
     return (
         '<?xml version="1.0" encoding="utf-8"?>\n'

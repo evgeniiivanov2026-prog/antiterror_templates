@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<style title="Контур — Антитеррор" description="Открытый форум по противодействию терроризму. Тёмный служебный хром, бумажная колонка для чтения, латунь как служебный акцент и малиновый сигнал только для действия." user_selectable="1" base_version_id="2021270" export_version="2">
+<style title="Контур — Антитеррор" description="Тёмный хром, бумажная колонка, латунь и малиновый сигнал действия." user_selectable="1" base_version_id="2021270" export_version="2">
   <assets/>
   <templates>
     <template title="extra.less" type="public" addon_id="" version_id="1000010" version_string="1.0.0"><![CDATA[// Контур — стиль XenForo для открытого форума по противодействию терроризму.
