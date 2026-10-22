@@ -1,0 +1,160 @@
+/* Макет каркаса публичных шаблонов XenForo. В сам стиль не входит. */
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+img { max-width: 100%; }
+button, input, textarea { font: inherit; color: inherit; }
+.u-srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.p-nav-list,
+.p-sectionLinks-list,
+.p-footer-linkList,
+.listInline,
+.structItem-parts,
+.p-breadcrumbs { list-style: none; margin: 0; padding: 0; }
+
+.p-navSticky { position: sticky; top: 0; z-index: 40; }
+.p-nav-scroller { flex: 1; min-width: 0; }
+.p-nav-list { display: flex; align-items: center; gap: 2px; }
+.p-nav-opposite { margin-left: auto; }
+.p-navgroup { display: flex; align-items: center; gap: 6px; }
+.p-nav-smallLogo { display: none; }
+.p-nav-menuTrigger {
+  display: none;
+  width: 40px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  cursor: pointer;
+}
+.p-nav-menuTrigger span,
+.p-nav-menuTrigger span::before,
+.p-nav-menuTrigger span::after {
+  display: block;
+  width: 16px;
+  height: 1.5px;
+  background: currentColor;
+  position: relative;
+}
+.p-nav-menuTrigger span::before,
+.p-nav-menuTrigger span::after {
+  content: "";
+  position: absolute;
+  left: 0;
+}
+.p-nav-menuTrigger span::before { top: -5px; }
+.p-nav-menuTrigger span::after { top: 5px; }
+
+.p-sectionLinks-list { display: flex; gap: 18px; flex-wrap: wrap; }
+
+.p-body-main { display: flex; align-items: flex-start; gap: 28px; }
+.p-body-content { flex: 1; min-width: 0; }
+.p-body-sidebar { width: 300px; flex: 0 0 300px; }
+.p-body-sidebar .block + .block { margin-top: 16px; }
+
+.p-title-pageAction { flex: 0 0 auto; }
+
+.node-body, .structItem, .message-inner, .contentRow {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.node-main, .structItem-cell--main, .contentRow-main, .message-cell--main { flex: 1; min-width: 0; }
+.node-stats { display: flex; gap: 18px; width: 168px; flex: 0 0 auto; }
+.node-extra { width: 240px; flex: 0 0 240px; }
+.node-extra-row + .node-extra-row { margin-top: 4px; }
+.node-icon { flex: 0 0 auto; }
+.structItem { padding: 14px 16px; align-items: center; }
+.structItem-cell--icon { flex: 0 0 auto; }
+.structItem-cell--meta { width: 128px; flex: 0 0 128px; }
+.structItem-cell--latest { width: 190px; flex: 0 0 190px; }
+.notices { list-style: none; margin: 0 0 22px; padding: 0; }
+.message-attribution { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.pairs--rows dt { display: block; }
+.block-row .pairs + .pairs { margin-top: 6px; }
+.structItem-cell--meta .pairs,
+.pairs { margin: 0; }
+.pairs--justified { display: flex; justify-content: space-between; gap: 8px; }
+.pairs dt, .pairs dd { margin: 0; }
+.structItem-cell--meta .pairs + .pairs { margin-top: 4px; }
+
+.message-inner { align-items: stretch; }
+.message-cell--user { width: 180px; flex: 0 0 180px; padding: 16px; }
+.message-cell--main { padding: 14px 18px 16px; }
+.message-user { text-align: center; }
+.message-avatar { display: flex; justify-content: center; }
+.message-userExtras { margin-top: 10px; text-align: left; }
+.message-userExtras .pairs + .pairs { margin-top: 4px; }
+.message-footer { margin-top: 10px; }
+.actionBar-set { display: flex; gap: 12px; list-style: none; margin: 0; padding: 0; }
+
+.avatar { display: inline-block; }
+.avatar--xxs { width: 22px; height: 22px; }
+.avatar--xs { width: 28px; height: 28px; }
+.avatar--s { width: 36px; height: 36px; }
+.avatar--m { width: 84px; height: 84px; }
+.p-navgroup-link--user { display: inline-flex; align-items: center; gap: 8px; }
+
+.block-filterBar, .filterBar { display: flex; justify-content: space-between; gap: 12px; padding: 8px 14px; font-size: 13px; }
+.pageNavWrapper { margin-top: 14px; }
+.listInline { display: flex; flex-wrap: wrap; gap: 6px 12px; }
+.p-footer-row, .p-footer-linkList { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+.contentRow + .contentRow { margin-top: 10px; }
+.bbWrapper h2, .bbWrapper h3 { text-wrap: balance; }
+
+.kordon-search {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+@media (max-width: 980px) {
+  .p-body-main { display: block; }
+  .p-body-sidebar { width: auto; margin-top: 22px; }
+  .node-extra { display: none; }
+  .structItem-cell--latest { display: none; }
+}
+
+@media (max-width: 720px) {
+  .p-nav-menuTrigger { display: inline-flex; }
+  .p-nav-scroller { display: none; }
+  .p-nav-list.is-active {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    position: absolute;
+    z-index: 60;
+    left: 0;
+    right: 0;
+    top: 100%;
+    background: #16233a;
+    padding: 8px 0 12px;
+  }
+  .p-nav { position: relative; }
+  .node-stats, .structItem-cell--meta { display: none; }
+  .message-inner { display: block; }
+  .message-cell--user {
+    width: auto;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    text-align: left;
+    border-right: 0;
+    border-bottom: 1px solid #d4cec2;
+  }
+  .message-user { display: flex; gap: 12px; align-items: center; text-align: left; }
+  .message-avatar { display: block; }
+  .message-userExtras { display: none; }
+  .avatar--m { width: 48px; height: 48px; }
+  .p-title { align-items: flex-start; flex-direction: column; }
+}

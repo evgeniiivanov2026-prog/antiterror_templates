@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ru" data-template="forum_list">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Форумы — Кордон</title>
+  <link rel="icon" href="/styles/kordon/mark.svg">
+  <link rel="stylesheet" href="scaffold.css">
+  <link rel="stylesheet" href="../extra.css">
+</head>
+<body class="template-forum_list">
+<a class="u-srOnly" href="#content">К содержанию</a>
+<div class="p-pageWrapper" id="top">
+  <div class="p-navSticky p-navSticky--primary">
+    <header class="p-header" id="header">
+      <div class="p-header-inner">
+        <div class="p-header-content">
+          <div class="p-header-logo p-header-logo--text">
+            <a href="index.html">Кордон</a>
+          </div>
+        </div>
+      </div>
+    </header>
+    <nav class="p-nav" aria-label="Разделы">
+      <div class="p-nav-inner">
+        <button class="p-nav-menuTrigger" type="button" aria-label="Меню" aria-expanded="false"><span></span></button>
+        <div class="p-nav-smallLogo"><a href="index.html">Кордон</a></div>
+        <div class="p-nav-scroller">
+          <ul class="p-nav-list">
+          <li class="p-navEl is-selected"><a class="p-navEl-link" href="index.html" aria-current="page">Форумы</a></li>
+          <li class="p-navEl"><a class="p-navEl-link" href="forum.html">Профилактика</a></li>
+          <li class="p-navEl"><a class="p-navEl-link" href="thread.html">Обсуждение</a></li>
+          <li class="p-navEl"><a class="p-navEl-link" href="forum.html#members">Участники</a></li>
+          </ul>
+        </div>
+        <div class="p-nav-opposite">
+          <div class="p-navgroup">
+            <a class="p-navgroup-link p-navgroup-link--search" href="forum.html" aria-label="Поиск">
+              <svg class="kordon-search" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.5 15.5 20 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </a>
+            <a class="p-navgroup-link p-navgroup-link--user" href="thread.html">
+              <span class="avatar avatar--xxs"><img src="/styles/kordon/avatars/mk.svg" alt="" width="80" height="80"></span>
+              <span class="p-navgroup-linkText">Марина</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="p-sectionLinks">
+      <div class="p-sectionLinks-inner">
+        <ul class="p-sectionLinks-list">
+          <li><a class="p-sectionLinks-link is-selected" href="index.html">Разделы</a></li>
+          <li><a class="p-sectionLinks-link" href="forum.html">Что нового</a></li>
+          <li><a class="p-sectionLinks-link" href="forum.html#rules">Правила разговора</a></li>
+          <li><a class="p-sectionLinks-link" href="tel:112">Линия 112</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="p-body">
+    <div class="p-body-inner">
+      <main class="p-body-main" id="content">
+        <div class="p-body-content">
+
+          <ul class="notices notices--block" aria-label="Объявление">
+            <li class="notice notice--primary"><div class="notice-content">3 сентября — день солидарности в борьбе с терроризмом. В разделе «Память» только материалы, которые редакция может проверить. Не публикуйте чужие биографии без согласия семьи.</div></li>
+          </ul>
+          <div class="block block--category">
+            <div class="block-container">
+              <h2 class="block-header"><a href="forum.html">Редакция</a><span class="block-desc">Как устроен форум и что считается доказанным</span></h2>
+              <div class="block-body">
+                <div class="node node--forum node--read">
+                  <div class="node-body">
+                    <span class="node-icon" aria-hidden="true"><i></i></span>
+                    <div class="node-main">
+                      <h3 class="node-title"><a href="forum.html">Объявления</a></h3>
+                      <div class="node-description">Служебные сообщения редакции: календарь памятных дат и правила выпуска.</div>
+                    </div>
+                    <div class="node-stats">
+                      <dl class="pairs pairs--rows"><dt>Темы</dt><dd>24</dd></dl>
+                      <dl class="pairs pairs--rows"><dt>Сообщения</dt><dd>180</dd></dl>
+                    </div>
+                    <div class="node-extra">
+                      <div class="node-extra-row"><a class="node-extra-title" href="thread.html">Расписание публикаций на ноябрь</a></div>
+                      <div class="node-extra-row u-muted">22 октября · Редакция</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="node node--forum node--read">
+                  <div class="node-body">
+                    <span class="node-icon" aria-hidden="true"><i></i></span>
+                    <div class="node-main">
+                      <h3 class="node-title"><a href="forum.html#rules">Правила и модерация</a></h3>
+                      <div class="node-description">Без слухов, без чужих фотографий, без инструкций. Спор идёт о фактах и заботе.</div>
+                    </div>
+                    <div class="node-stats">
+                      <dl class="pairs pairs--rows"><dt>Темы</dt><dd>8</dd></dl>
+                      <dl class="pairs pairs--rows"><dt>Сообщения</dt><dd>96</dd></dl>
+                    </div>
+                    <div class="node-extra">
+                      <div class="node-extra-row"><a class="node-extra-title" href="thread.html">Что удаляет модератор</a></div>
+                      <div class="node-extra-row u-muted">вчера · Павел Ершов</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="block block--category">
+            <div class="block-container">
+              <h2 class="block-header"><a href="thread.html">Память</a><span class="block-desc">Имена публикуются только с проверяемым источником</span></h2>
+              <div class="block-body">
+                <div class="node node--forum node--unread">
+                  <div class="node-body">
+                    <span class="node-icon" aria-hidden="true"><i></i></span>
+                    <div class="node-main">
+                      <h3 class="node-title"><a href="thread.html">Имена и даты</a></h3>
+                      <div class="node-description">Как редакция сверяет дату, место и согласие семьи, прежде чем открыть тему.</div>
+                    </div>
+                    <div class="node-stats">
+                      <dl class="pairs pairs--rows"><dt>Темы</dt><dd>40</dd></dl>
+                      <dl class="pairs pairs--rows"><dt>Сообщения</dt><dd>520</dd></dl>
+                    </div>
+                    <div class="node-extra">
+                      <div class="node-extra-row"><a class="node-extra-title" href="thread.html">Как устроена проверка материала</a></div>
+                      <div class="node-extra-row u-muted">сегодня · Марина Кольцова</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="node node--forum node--read">
+                  <div class="node-body">
+                    <span class="node-icon" aria-hidden="true"><i></i></span>
+                    <div class="node-main">
+                      <h3 class="node-title"><a href="forum.html">Семейные свидетельства</a></h3>
+                      <div class="node-description">Письма и фотографии присылает семья. Редакция не дописывает биографию.</div>
+                    </div>
+                    <div class="node-stats">
+                      <dl class="pairs pairs--rows"><dt>Темы</dt><dd>18</dd></dl>
+                      <dl class="pairs pairs--rows"><dt>Сообщения</dt><dd>240</dd></dl>
+                    </div>
+                    <div class="node-extra">
+                      <div class="node-extra-row"><a class="node-extra-title" href="forum.html">Форма согласия на публикацию</a></div>
+                      <div class="node-extra-row u-muted">12 октября · Нина Савельева</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="block block--category">
+            <div class="block-container">
+              <h2 class="block-header"><a href="forum.html">Профилактика</a><span class="block-desc">Разговор без запугивания</span></h2>
+              <div class="block-body">
+                <div class="node node--forum node--unread">
+                  <div class="node-body">
+                    <span class="node-icon" aria-hidden="true"><i></i></span>
+                    <div class="node-main">
+                      <h3 class="node-title"><a href="thread.html">Разговор с детьми</a></h3>
+                      <div class="node-description">Как отвечать на тревожные новости в классе и дома, не показывая кадры.</div>
+                    </div>
+                    <div class="node-stats">
+                      <dl class="pairs pairs--rows"><dt>Темы</dt><dd>31</dd></dl>
+                      <dl class="pairs pairs--rows"><dt>Сообщения</dt><dd>640</dd></dl>
+                    </div>
+                    <div class="node-extra">
+                      <div class="node-extra-row"><a class="node-extra-title" href="thread.html">Как говорить с классом о тревожных новостях</a></div>
+                      <div class="node-extra-row u-muted">сегодня · Марина Кольцова</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="node node--forum">
+                  <div class="node-body">
+                    <span class="node-icon" aria-hidden="true"><i></i></span>
+                    <div class="node-main">
+                      <h3 class="node-title"><a href="forum.html">Школа и двор</a></h3>
+                      <div class="node-description">Тревога у входа, незнакомый свёрток, закрытая дверь. Куда звонить, а не что разбирать.</div>
+                    </div>
+                    <div class="node-stats">
+                      <dl class="pairs pairs--rows"><dt>Темы</dt><dd>22</dd></dl>
+                      <dl class="pairs pairs--rows"><dt>Сообщения</dt><dd>410</dd></dl>
+                    </div>
+                    <div class="node-extra">
+                      <div class="node-extra-row"><a class="node-extra-title" href="forum.html">Памятка для дежурного учителя</a></div>
+                      <div class="node-extra-row u-muted">18 октября · Артём Белов</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="node node--link">
+                  <div class="node-body">
+                    <span class="node-icon" aria-hidden="true"><i></i></span>
+                    <div class="node-main">
+                      <h3 class="node-title"><a href="tel:112">Куда сообщать</a></h3>
+                      <div class="node-description">112 — экстренные службы. Форум не принимает оперативные сообщения.</div>
+                    </div>
+                    <div class="node-stats">
+                      <dl class="pairs pairs--rows"><dt>Переход</dt><dd>112</dd></dl>
+                    </div>
+                    <div class="node-extra"><div class="node-extra-row u-muted">телефон, не тема</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        
+<aside class="p-body-sidebar">
+  <div class="block">
+    <div class="block-container kordon-hotline">
+      <p class="kordon-hotline-kicker">Линия доверия</p>
+      <a class="kordon-hotline-number" href="tel:112">112</a>
+      <p class="kordon-hotline-text">Единый номер экстренных служб. Если есть угроза, звоните сразу: где вы и что происходит. Это не чат форума.</p>
+    </div>
+  </div>
+  <div class="block" id="members">
+    <div class="block-container">
+      <h3 class="block-minorHeader">Сейчас на форуме</h3>
+      <div class="block-body block-row">
+        <dl class="pairs pairs--justified"><dt>Темы</dt><dd>186</dd></dl>
+        <dl class="pairs pairs--justified"><dt>Сообщения</dt><dd>2&nbsp;431</dd></dl>
+        <dl class="pairs pairs--justified"><dt>Участники</dt><dd>914</dd></dl>
+      </div>
+      <div class="block-footer">Новый участник: Нина Савельева</div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="block-container">
+      <h3 class="block-minorHeader">На линии</h3>
+      <div class="block-body block-row">
+        <div class="contentRow">
+          <span class="avatar avatar--xs"><img src="/styles/kordon/avatars/ab.svg" alt="" width="80" height="80"></span>
+          <div class="contentRow-main"><a class="contentRow-title" href="thread.html">Артём Белов</a><div class="contentRow-minor u-muted">читает правила</div></div>
+        </div>
+        <div class="contentRow">
+          <span class="avatar avatar--xs"><img src="/styles/kordon/avatars/ns.svg" alt="" width="80" height="80"></span>
+          <div class="contentRow-main"><a class="contentRow-title" href="thread.html">Нина Савельева</a><div class="contentRow-minor u-muted">в разделе «Память»</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+      </main>
+    </div>
+  </div>
+
+  <footer class="p-footer">
+    <div class="p-footer-inner">
+      <div class="p-footer-row">
+        <ul class="p-footer-linkList">
+          <li><a href="index.html">Правила</a></li>
+          <li><a href="forum.html">Профилактика</a></li>
+          <li><a href="thread.html">Как устроен разговор</a></li>
+          <li><a href="tel:112">112</a></li>
+        </ul>
+        <ul class="p-footer-linkList">
+          <li><a href="#" data-kordon-theme="light">Кордон</a></li>
+          <li><a href="#" data-kordon-theme="dark">Кордон · ночь</a></li>
+        </ul>
+      </div>
+      <div class="p-footer-copyright">Кордон · образец оформления для XenForo. Тексты на макете вымышлены.</div>
+    </div>
+  </footer>
+</div>
+
+<script src="preview.js"></script>
+</body>
+</html>
