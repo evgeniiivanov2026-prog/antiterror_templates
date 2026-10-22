@@ -1,0 +1,33 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap");
+
+body {
+	font-family: Manrope, Arial, sans-serif;
+	background: #f3efe6;
+	color: #1c2433;
+	line-height: 1.65;
+}
+
+h1,
+h2,
+h3,
+h4 {
+	font-family: "Source Serif 4", Georgia, serif;
+	line-height: 1.12;
+	letter-spacing: -0.03em;
+}
+
+a { color: inherit; }
+
+.strazha-note {
+	border-top: 1px solid #9d2b32;
+	border-bottom: 1px solid #ddd6c8;
+	padding: 0.2rem 0;
+}
+
+blockquote {
+	border-left: 1px solid #9d2b32;
+	margin-left: 0;
+	padding-left: 1rem;
+	font-family: "Source Serif 4", Georgia, serif;
+	font-size: 1.35rem;
+}
