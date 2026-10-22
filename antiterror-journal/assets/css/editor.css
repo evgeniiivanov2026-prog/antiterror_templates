@@ -1,0 +1,25 @@
+body {
+  font-family: Manrope, Arial, sans-serif;
+  color: #172033;
+  background: #faf8f3;
+}
+
+.editor-styles-wrapper h1,
+.editor-styles-wrapper h2,
+.editor-styles-wrapper h3,
+.wp-block-heading {
+  font-family: Newsreader, "PT Serif", Georgia, serif;
+  letter-spacing: -.03em;
+}
+
+.atj-pullquote {
+  font-family: Newsreader, Georgia, serif;
+  font-size: 1.6rem;
+  border-left: 2px solid #861f32;
+}
+
+.atj-notice {
+  padding: 1rem 1.2rem;
+  background: #861f32;
+  color: #fffdfa;
+}

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Фонд инициатив — Антитеррор</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,400;500;600;700&display=swap&subset=cyrillic" rel="stylesheet">
+  <link rel="stylesheet" href="../antiterror-journal/assets/css/theme.css">
+</head>
+<body class="atj-site">
+<div class="atj-grain" aria-hidden="true"></div>
+<header class="atj-header">
+  <div class="atj-header__bar atj-shell">
+    <a class="atj-logo" href="index.html"><span class="atj-logo__mark"><svg viewBox="0 0 52 60"><path d="M26 2 49 11v18c0 13-8 24-23 29C11 53 3 42 3 29V11L26 2Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M26 16v20M16 26h20" fill="none" stroke="currentColor" stroke-width="2.4"/></svg></span><span class="atj-logo__text"><strong>Журнал</strong><b>Антитеррор</b></span></a>
+    <nav class="atj-nav"><ul class="atj-nav__list"><li><a href="index.html#journal">Журнал</a></li><li><a href="heroes.html">Память</a></li><li><a href="initiatives.html">Фонд</a></li></ul></nav>
+    <div class="atj-header__actions">
+      <button class="atj-icon-btn" type="button" data-theme-toggle aria-label="Включить тёмную тему"><svg class="atj-icon-moon" viewBox="0 0 24 24"><path d="M20.7 15.1A9 9 0 0 1 8.9 3.3 9 9 0 1 0 20.7 15.1Z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><svg class="atj-icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
+      <a class="atj-btn atj-btn--solid" href="index.html#report">Сообщить →</a>
+      <button class="atj-burger" type="button" aria-expanded="false" aria-controls="atj-mobile"><span></span><span></span></button>
+    </div>
+  </div>
+  <div id="atj-mobile" class="atj-mobile" hidden><nav class="atj-shell"><a href="index.html">Журнал</a><a href="heroes.html">Память</a><a href="initiatives.html">Фонд</a></nav></div>
+</header>
+<main id="content" class="atj-page atj-shell">
+  <header class="atj-page__head">
+    <nav class="atj-breadcrumbs"><a href="index.html">Журнал</a><span>/</span><span>Фонд инициатив</span></nav>
+    <p class="atj-section-number">03 / Фонд</p>
+    <h1>Фонд инициатив</h1>
+    <p>Голосуйте за инициативы в сфере антитеррора. Редакция модерирует каждую заявку.</p>
+  </header>
+  <div class="atj-ballot">
+    <article class="atj-ballot__item">
+      <p class="atj-ballot__rank">01</p>
+      <div class="atj-ballot__copy"><p class="atj-kicker">Просвещение</p><h3><a href="index.html#fund">Модуль для педагогов и родителей</a></h3><p>Открытый урок о признаках угрозы и маршруте обращения.</p></div>
+      <div class="atj-vote" data-vote-root data-voted="false"><button class="atj-vote__button" type="button" data-vote="1"><span class="atj-vote__mark">+</span><span class="atj-vote__text">Поддержать</span></button><p class="atj-vote__count"><strong>128</strong> <span>голосов</span></p></div>
+    </article>
+    <article class="atj-ballot__item">
+      <p class="atj-ballot__rank">02</p>
+      <div class="atj-ballot__copy"><p class="atj-kicker">Память</p><h3><a href="index.html#fund">Стипендиальный фонд детям погибших</a></h3><p>Программа поддержки семей после юридических документов.</p></div>
+      <div class="atj-vote" data-vote-root data-voted="false"><button class="atj-vote__button" type="button" data-vote="2"><span class="atj-vote__mark">+</span><span class="atj-vote__text">Поддержать</span></button><p class="atj-vote__count"><strong>96</strong> <span>голосов</span></p></div>
+    </article>
+  </div>
+</main>
+<footer class="atj-footer"><div class="atj-shell atj-footer__bottom"><span>© 2026 Журнал антитеррора</span><span>В угрозе жизни звоните 112.</span></div></footer>
+<script src="../antiterror-journal/assets/js/theme.js"></script>
+<script>
+document.addEventListener('click', function (event) {
+  var button = event.target.closest('[data-vote]');
+  if (!button) return;
+  var root = button.closest('[data-vote-root]');
+  var count = root.querySelector('strong');
+  count.textContent = Number(count.textContent) + 1;
+  root.setAttribute('data-voted', 'true');
+  root.querySelector('.atj-vote__text').textContent = 'Голос учтён';
+  var mark = root.querySelector('.atj-vote__mark');
+  if (mark) mark.textContent = '✓';
+  button.disabled = true;
+});
+</script>
+</body>
+</html>

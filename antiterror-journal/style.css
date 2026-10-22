@@ -1,0 +1,20 @@
+/*
+Theme Name: Antiterror Journal
+Theme URI: https://github.com/evgeniiivanov2026-prog/antiterror_templates
+Author: Antiterror Journal
+Description: Гибкий журнальный шаблон WordPress 7.1 для редакции антитеррора: выпуски, память героев и фонд гражданских инициатив с голосованием. Собран из журнальной системы JournalX и академической гражданской темы Root.
+Requires at least: 6.6
+Tested up to: 7.1
+Requires PHP: 8.1
+Version: 1.0.0
+License: GNU General Public License v2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: antiterror-journal
+Tags: journal, magazine, custom-logo, custom-menu, featured-images, threaded-comments, translation-ready, block-styles, editor-style, full-site-editing, news, one-column, two-columns, wide-blocks
+
+Art direction: civic editorial 2027
+JournalX DNA: magazine masthead, featured story, post cards, related reading
+Root academic DNA: civic navy, burgundy action, numbered chapters, institutional trust
+*/
+
+/* Front-end styles live in assets/css/theme.css and are enqueued from functions.php. */

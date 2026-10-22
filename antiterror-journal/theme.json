@@ -1,0 +1,82 @@
+{
+	"$schema": "https://schemas.wp.org/wp/7.1/theme.json",
+	"version": 3,
+	"settings": {
+		"appearanceTools": true,
+		"useRootPaddingAwareAlignments": true,
+		"layout": {
+			"contentSize": "720px",
+			"wideSize": "1240px"
+		},
+		"color": {
+			"defaultPalette": false,
+			"defaultGradients": false,
+			"palette": [
+				{ "slug": "paper", "color": "#f3f0e9", "name": "Бумага" },
+				{ "slug": "surface", "color": "#faf8f3", "name": "Поверхность" },
+				{ "slug": "ink", "color": "#172033", "name": "Чернила" },
+				{ "slug": "navy", "color": "#121c2e", "name": "Институциональный" },
+				{ "slug": "burgundy", "color": "#861f32", "name": "Действие" },
+				{ "slug": "gold", "color": "#b08a4a", "name": "Память" },
+				{ "slug": "muted", "color": "#5d6470", "name": "Приглушённый" }
+			]
+		},
+		"typography": {
+			"fluid": true,
+			"fontFamilies": [
+				{
+					"slug": "display",
+					"name": "Журнальный",
+					"fontFamily": "Newsreader, \"PT Serif\", Georgia, serif"
+				},
+				{
+					"slug": "body",
+					"name": "Гражданский",
+					"fontFamily": "Manrope, Arial, sans-serif"
+				},
+				{
+					"slug": "mono",
+					"name": "Служебный",
+					"fontFamily": "\"IBM Plex Mono\", ui-monospace, monospace"
+				}
+			]
+		},
+		"spacing": {
+			"units": ["px", "rem", "vw", "%"]
+		}
+	},
+	"styles": {
+		"color": {
+			"background": "var(--wp--preset--color--paper)",
+			"text": "var(--wp--preset--color--ink)"
+		},
+		"typography": {
+			"fontFamily": "var(--wp--preset--font-family--body)",
+			"fontSize": "1.05rem",
+			"lineHeight": "1.65"
+		},
+		"elements": {
+			"heading": {
+				"typography": {
+					"fontFamily": "var(--wp--preset--font-family--display)",
+					"fontWeight": "500",
+					"lineHeight": "1.1"
+				}
+			},
+			"link": {
+				"color": {
+					"text": "var(--wp--preset--color--burgundy)"
+				}
+			},
+			"button": {
+				"color": {
+					"background": "var(--wp--preset--color--burgundy)",
+					"text": "#fffdfa"
+				},
+				"border": {
+					"radius": "2px"
+				}
+			}
+		}
+	}
+}
