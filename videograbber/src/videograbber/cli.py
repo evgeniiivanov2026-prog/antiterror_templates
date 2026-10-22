@@ -50,7 +50,10 @@ def build_parser() -> argparse.ArgumentParser:
             "  videograbber https://example.com/clip --quality 720 -o ~/Videos/clip.mp4\n"
             "\n"
             "Если исходник уже H.264 и AAC, дорожки копируются без потери качества.\n"
-            "Иначе программа перекодирует их так, чтобы файл открывался в обычном плеере."
+            "Иначе программа перекодирует их так, чтобы файл открывался в обычном плеере.\n"
+            "\n"
+            "Локальная страница:\n"
+            "  videograbber web"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -101,8 +104,13 @@ def render_result(result: GrabResult) -> str:
 
 
 def run(argv: list[str] | None = None) -> int:
+    arguments = list(sys.argv[1:] if argv is None else argv)
+    if arguments and arguments[0] == "web":
+        from videograbber.web import run_web
+
+        return run_web(arguments[1:])
     parser = build_parser()
-    args = parser.parse_args(argv)
+    args = parser.parse_args(arguments)
     reporter = None if args.quiet else Reporter(sys.stderr)
     try:
         result = grab(

@@ -69,6 +69,33 @@ def test_grab_transcodes_incompatible_streams_and_names_the_file(tmp_path):
     assert ffmpeg[ffmpeg.index("-c:v") + 1] == "libx264"
 
 
+def _faststart_mp4() -> bytes:
+    def box(kind: bytes, payload: bytes = b"") -> bytes:
+        return (8 + len(payload)).to_bytes(4, "big") + kind + payload
+
+    return box(b"ftyp", b"isom") + box(b"moov", b"head") + box(b"mdat", b"media")
+
+
+def test_grab_copies_a_ready_mp4_without_ffmpeg(tmp_path):
+    commands: list[list[str]] = []
+    payload = _faststart_mp4()
+
+    def download(url, directory, max_height, on_progress, cookiefile=None):
+        path = directory / "media.mp4"
+        path.write_bytes(payload)
+        return Source(path=path, title="Готовый", duration=2)
+
+    result = grab(
+        "https://videos.example/ready.mp4",
+        output=tmp_path / "saved.mp4",
+        downloader=download,
+        runner=_runner("h264", "aac", commands),
+    )
+    assert result.remuxed is True
+    assert result.path.read_bytes() == payload
+    assert [command[0] for command in commands] == ["ffprobe"]
+
+
 def test_grab_remuxes_h264_aac_without_reencoding(tmp_path):
     commands: list[list[str]] = []
     result = grab(

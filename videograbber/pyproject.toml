@@ -1,6 +1,6 @@
 [project]
 name = "videograbber"
-version = "1.0.0"
+version = "1.1.0"
 description = "Скачивает видео по ссылке и собирает полноценный MP4-файл."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -22,6 +22,9 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+videograbber = ["web_page.html"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

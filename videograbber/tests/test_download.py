@@ -76,6 +76,8 @@ def test_cookie_file_is_passed_to_yt_dlp(tmp_path):
     options = build_ydl_options(tmp_path, 720, None, tmp_path / "cookies.txt")
     assert options["cookiefile"] == str(tmp_path / "cookies.txt")
     assert options["noplaylist"] is True
+    assert options["concurrent_fragment_downloads"] >= 8
+    assert options["buffersize"] >= 1024 * 1024
     assert "cookiefile" not in build_ydl_options(tmp_path, None, None)
 
 

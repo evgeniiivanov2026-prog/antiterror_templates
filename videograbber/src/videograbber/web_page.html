@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>videograbber</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1c1915;
+      --muted: #5e584f;
+      --paper: #f3efe6;
+      --card: #fffdf8;
+      --line: #1c1915;
+      --green: #0f6e56;
+      --amber: #e39b2b;
+      --danger: #9d2c2c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.45;
+    }
+    main {
+      width: min(40rem, calc(100% - 2rem));
+      margin: 2.5rem auto;
+      padding: 1.5rem;
+      background: var(--card);
+      border: 1px solid var(--line);
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.75rem;
+      letter-spacing: -0.03em;
+    }
+    .lead { margin: 0.4rem 0 1.25rem; color: var(--muted); }
+    label { display: block; font-weight: 650; margin-bottom: 0.35rem; }
+    input, select, button, a.button {
+      width: 100%;
+      font: inherit;
+    }
+    input, select {
+      padding: 0.7rem 0.75rem;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 0;
+    }
+    .field { margin-bottom: 0.9rem; }
+    button, a.button {
+      display: inline-block;
+      margin-top: 0.3rem;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--line);
+      background: var(--green);
+      color: #fff;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    button:disabled { cursor: wait; opacity: 0.7; }
+    button:focus-visible, a.button:focus-visible, input:focus, select:focus {
+      outline: 2px solid var(--green);
+      outline-offset: 2px;
+    }
+    #progress { margin-top: 1.25rem; }
+    #progress[hidden], #result[hidden] { display: none; }
+    .track {
+      height: 0.7rem;
+      border: 1px solid var(--line);
+      background: #efeae1;
+      overflow: hidden;
+    }
+    .fill {
+      height: 100%;
+      width: 0;
+      background: var(--amber);
+    }
+    .track.unknown .fill {
+      width: 35%;
+      animation: slide 1.1s ease-in-out infinite;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .track.unknown .fill { animation: none; width: 100%; opacity: 0.45; }
+    }
+    @keyframes slide {
+      from { transform: translateX(-120%); }
+      to { transform: translateX(320%); }
+    }
+    #status { min-height: 1.4rem; margin: 0.55rem 0 0; }
+    #result {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid #d9d2c5;
+    }
+    #detail { margin: 0.35rem 0 0.8rem; color: var(--muted); }
+    .error { color: var(--danger); }
+    footer { margin-top: 1.2rem; color: var(--muted); font-size: 0.9rem; }
+    @media (max-width: 640px) {
+      main { width: 100%; margin: 0; border-width: 0 0 1px; min-height: 100vh; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>videograbber</h1>
+    <p class="lead">Вставьте ссылку. Программа соберёт один MP4 на этом компьютере.</p>
+    <form id="form">
+      <div class="field">
+        <label for="url">Ссылка</label>
+        <input id="url" name="url" type="url" inputmode="url" placeholder="https://" required autocomplete="url">
+      </div>
+      <div class="field">
+        <label for="quality">Качество</label>
+        <select id="quality" name="quality">
+          <option value="best">Лучшее</option>
+          <option value="2160">2160p</option>
+          <option value="1440">1440p</option>
+          <option value="1080">1080p</option>
+          <option value="720" selected>720p</option>
+          <option value="480">480p</option>
+          <option value="360">360p</option>
+        </select>
+      </div>
+      <button id="submit" type="submit">Собрать MP4</button>
+    </form>
+    <section id="progress" hidden>
+      <div id="track" class="track unknown" aria-hidden="true"><div id="fill" class="fill"></div></div>
+      <p id="status" role="status" aria-live="polite"></p>
+    </section>
+    <section id="result" hidden>
+      <p id="ready">Файл готов</p>
+      <p id="detail"></p>
+      <a id="download" class="button" href="#">Скачать MP4</a>
+    </section>
+    <footer>Сохраняйте только то, что вам разрешено скачивать.</footer>
+  </main>
+  <script>
+    const form = document.querySelector("#form");
+    const submit = document.querySelector("#submit");
+    const progress = document.querySelector("#progress");
+    const result = document.querySelector("#result");
+    const status = document.querySelector("#status");
+    const detail = document.querySelector("#detail");
+    const track = document.querySelector("#track");
+    const fill = document.querySelector("#fill");
+    const download = document.querySelector("#download");
+
+    function setProgress(percent) {
+      if (percent === null || percent === undefined) {
+        track.classList.add("unknown");
+        fill.style.width = "";
+        return;
+      }
+      track.classList.remove("unknown");
+      fill.style.width = Math.max(0, Math.min(100, percent)) + "%";
+    }
+
+    function showError(message) {
+      status.classList.add("error");
+      status.textContent = message;
+      submit.disabled = false;
+      submit.textContent = "Собрать MP4";
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      result.hidden = true;
+      progress.hidden = false;
+      status.classList.remove("error");
+      status.textContent = "Отправляю ссылку";
+      setProgress(null);
+      submit.disabled = true;
+      submit.textContent = "Собираю…";
+      let response;
+      try {
+        response = await fetch("/api/jobs", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Videograbber": "1"
+          },
+          body: JSON.stringify({
+            url: document.querySelector("#url").value,
+            quality: document.querySelector("#quality").value
+          })
+        });
+      } catch (error) {
+        showError("Нет связи с программой.");
+        return;
+      }
+      const payload = await response.json();
+      if (!response.ok) {
+        showError(payload.error || "Не удалось начать загрузку.");
+        return;
+      }
+      const source = new EventSource(payload.events);
+      source.onmessage = (message) => {
+        const data = JSON.parse(message.data);
+        status.textContent = data.message || "";
+        setProgress(data.percent);
+        if (data.status === "done") {
+          source.close();
+          progress.hidden = true;
+          detail.textContent = data.detail || "";
+          download.href = data.download;
+          download.download = data.filename || "video.mp4";
+          result.hidden = false;
+          submit.disabled = false;
+          submit.textContent = "Собрать MP4";
+        } else if (data.status === "error") {
+          source.close();
+          showError(data.message || "Не удалось собрать видео.");
+        }
+      };
+      source.onerror = () => {
+        if (result.hidden && !status.classList.contains("error")) {
+          source.close();
+          showError("Соединение с программой прервалось.");
+        }
+      };
+    });
+  </script>
+</body>
+</html>

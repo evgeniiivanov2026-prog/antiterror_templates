@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import tempfile
 from dataclasses import dataclass
@@ -14,6 +15,7 @@ from videograbber.errors import UserError
 from videograbber.media import (
     ProgressEvent,
     assemble_mp4,
+    moov_before_mdat,
     parse_quality,
     probe_media,
     require_tools,
@@ -68,26 +70,37 @@ def grab(
             )
         copy_video, copy_audio = stream_copy_plan(inspected)
         remuxed = copy_video and copy_audio
-        if on_progress is not None:
-            action = (
-                "Собираю MP4: копирую дорожки"
-                if remuxed
-                else "Собираю MP4: привожу к H.264 и AAC"
-            )
-            on_progress(ProgressEvent(action))
-        partial = assemble_mp4(
-            source.path,
-            destination,
-            inspected,
-            on_progress,
-            runner=runner,
+        reusable = (
+            remuxed
+            and source.path.suffix.lower() == ".mp4"
+            and moov_before_mdat(source.path)
         )
-        try:
-            packed = probe_media(partial, probe_runner)
-            os.replace(partial, destination)
-        except Exception:
-            partial.unlink(missing_ok=True)
-            raise
+        if on_progress is not None:
+            if reusable:
+                action = "Файл уже MP4, сохраняю"
+            elif remuxed:
+                action = "Собираю MP4: копирую дорожки"
+            else:
+                action = "Собираю MP4: привожу к H.264 и AAC"
+            on_progress(ProgressEvent(action))
+        if reusable:
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source.path, destination)
+            packed = inspected
+        else:
+            partial = assemble_mp4(
+                source.path,
+                destination,
+                inspected,
+                on_progress,
+                runner=runner,
+            )
+            try:
+                packed = probe_media(partial, probe_runner)
+                os.replace(partial, destination)
+            except Exception:
+                partial.unlink(missing_ok=True)
+                raise
     audio = ", ".join(codec for codec in packed.audio_codecs if codec) or None
     return GrabResult(
         path=destination.resolve(),

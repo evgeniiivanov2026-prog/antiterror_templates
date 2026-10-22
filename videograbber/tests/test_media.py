@@ -11,6 +11,7 @@ from videograbber.media import (
     format_bytes,
     format_duration,
     format_selector,
+    moov_before_mdat,
     parse_ffmpeg_time,
     parse_ffprobe,
     parse_quality,
@@ -28,6 +29,20 @@ def test_format_selector_prefers_compatible_streams_at_requested_height():
 
 def test_format_selector_without_limit_still_has_fallback():
     assert format_selector(None).endswith("bestvideo+bestaudio/best/best")
+
+
+def _box(kind: bytes, payload: bytes = b"") -> bytes:
+    return (8 + len(payload)).to_bytes(4, "big") + kind + payload
+
+
+def test_moov_before_mdat_reads_only_the_header_order(tmp_path):
+    ready = tmp_path / "ready.mp4"
+    ready.write_bytes(_box(b"ftyp", b"isom") + _box(b"moov", b"head") + _box(b"mdat", b"data"))
+    late = tmp_path / "late.mp4"
+    late.write_bytes(_box(b"ftyp", b"isom") + _box(b"mdat", b"data") + _box(b"moov", b"head"))
+    assert moov_before_mdat(ready) is True
+    assert moov_before_mdat(late) is False
+    assert moov_before_mdat(tmp_path / "missing.mp4") is False
 
 
 def test_parse_quality():
@@ -127,6 +142,7 @@ def test_ffmpeg_command_copies_h264_aac_and_transcodes_the_rest(tmp_path):
     transcode = build_ffmpeg_command(source, dest, foreign)
     assert transcode[transcode.index("-c:v") + 1] == "libx264"
     assert transcode[transcode.index("-c:a") + 1] == "aac"
+    assert transcode[transcode.index("-threads") + 1] == "0"
     assert "yuv420p" in transcode
 
 

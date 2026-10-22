@@ -3,12 +3,19 @@
 from __future__ import annotations
 
 import re
+import threading
 import time
 from dataclasses import dataclass
 from pathlib import Path
 
 from videograbber.errors import DependencyError, DownloadError
 from videograbber.media import ProgressEvent, format_bytes, format_selector
+from videograbber.parallel import (
+    BUFFER_SIZE,
+    PARALLEL_CONNECTIONS,
+    RangeNotSupported,
+    download_parallel,
+)
 
 _ANSI = re.compile(r"\x1b\[[0-9;]*m")
 _MEDIA_SUFFIXES = {
@@ -76,7 +83,8 @@ class DownloadProgress:
             message = (
                 f"Скачивание, {label}: {self._last_percent}% ({format_bytes(downloaded)})"
             )
-        self._on_progress(ProgressEvent(message, transient=True))
+        shown = None if percent is None else self._last_percent
+        self._on_progress(ProgressEvent(message, transient=True, percent=shown))
 
 
 class _SilentLogger:
@@ -115,11 +123,13 @@ def build_ydl_options(
         "quiet": True,
         "no_warnings": True,
         "noprogress": True,
-        "retries": 5,
-        "fragment_retries": 5,
+        "retries": 10,
+        "fragment_retries": 10,
         "extractor_retries": 3,
         "socket_timeout": 30,
-        "concurrent_fragment_downloads": 4,
+        "buffersize": BUFFER_SIZE,
+        "concurrent_fragment_downloads": PARALLEL_CONNECTIONS,
+        "format_sort": ["res", "fps", "codec:h264", "acodec:aac", "br"],
         "progress_hooks": [DownloadProgress(on_progress)],
         "match_filter": reject_unsupported,
         "logger": _SilentLogger(),
@@ -128,6 +138,71 @@ def build_ydl_options(
     if cookiefile is not None:
         options["cookiefile"] = str(cookiefile)
     return options
+
+
+def _can_accelerate(info: dict) -> bool:
+    """Обычный HTTP-файл можно качать несколькими соединениями. Потоки HLS и DASH — нет."""
+
+    if info.get("fragments") or info.get("requested_formats"):
+        return False
+    protocol = str(info.get("protocol") or "http").split("+", 1)[0]
+    if protocol not in {"http", "https"}:
+        return False
+    url = str(info.get("url") or "")
+    if not url.startswith(("http://", "https://")):
+        return False
+    lowered = url.lower()
+    return ".m3u8" not in lowered and ".mpd" not in lowered and ".f4m" not in lowered
+
+
+def _header_map(headers) -> dict[str, str]:
+    mapped = {}
+    for key, value in (headers or {}).items():
+        if value is None:
+            continue
+        mapped[str(key)] = str(value)
+    return mapped
+
+
+def _open_fast(youtube_dl, options):
+    class FastYoutubeDL(youtube_dl):
+        def __init__(self, params):
+            super().__init__(params)
+            self._hook_lock = threading.Lock()
+
+        def dl(self, name, info, subtitle=False, test=False):
+            if subtitle or test or not _can_accelerate(info):
+                return super().dl(name, info, subtitle=subtitle, test=test)
+            try:
+                download_parallel(
+                    str(info["url"]),
+                    Path(name),
+                    _header_map(info.get("http_headers")),
+                    lambda done, total: self._report(info, done, total),
+                )
+            except RangeNotSupported:
+                return super().dl(name, info, subtitle=subtitle, test=test)
+            self._report_finished(info)
+            return True, True
+
+        def _report(self, info: dict, done: int, total: int) -> None:
+            payload = {
+                "status": "downloading",
+                "downloaded_bytes": done,
+                "total_bytes": total,
+                "info_dict": info,
+            }
+            with self._hook_lock:
+                for hook in self._progress_hooks:
+                    hook(payload)
+
+        def _report_finished(self, info: dict) -> None:
+            payload = {"status": "finished", "info_dict": info}
+            with self._hook_lock:
+                for hook in self._progress_hooks:
+                    hook(payload)
+
+    return FastYoutubeDL(options)
 
 
 def download_video(
@@ -147,7 +222,7 @@ def download_video(
 
     options = build_ydl_options(directory, max_height, on_progress, cookiefile)
     try:
-        with yt_dlp.YoutubeDL(options) as ydl:
+        with _open_fast(yt_dlp.YoutubeDL, options) as ydl:
             info = ydl.extract_info(url, download=True)
     except YtDlpDownloadError as exc:
         raise DownloadError(_clean_message(str(exc))) from exc

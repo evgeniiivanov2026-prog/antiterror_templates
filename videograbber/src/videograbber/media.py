@@ -52,6 +52,7 @@ class ProgressEvent:
 
     message: str
     transient: bool = False
+    percent: int | None = None
 
 
 def require_tools() -> None:
@@ -209,7 +210,16 @@ def build_ffmpeg_command(source: Path, dest: Path, info: MediaInfo) -> list[str]
     ]
     if not copy_video:
         command.extend(
-            ["-preset", TRANSCODE_PRESET, "-crf", TRANSCODE_CRF, "-pix_fmt", "yuv420p"]
+            [
+                "-threads",
+                "0",
+                "-preset",
+                TRANSCODE_PRESET,
+                "-crf",
+                TRANSCODE_CRF,
+                "-pix_fmt",
+                "yuv420p",
+            ]
         )
     if info.audio_codecs:
         if copy_audio:
@@ -305,13 +315,13 @@ def _run_ffmpeg(command: list[str], duration: float | None, on_progress) -> None
             if percent == last_percent:
                 continue
             last_percent = percent
-            on_progress(ProgressEvent(f"Сборка MP4: {percent}%", transient=True))
+            on_progress(ProgressEvent(f"Сборка MP4: {percent}%", transient=True, percent=percent))
     code = process.wait()
     thread.join()
     if code != 0:
         raise MediaError(_ffmpeg_error("".join(stderr_lines)))
     if on_progress is not None:
-        on_progress(ProgressEvent("Сборка MP4: 100%", transient=True))
+        on_progress(ProgressEvent("Сборка MP4: 100%", transient=True, percent=100))
 
 
 def _ffmpeg_error(stderr: str | None) -> str:
@@ -319,6 +329,39 @@ def _ffmpeg_error(stderr: str | None) -> str:
     if not lines:
         return "ffmpeg не смог собрать MP4."
     return f"ffmpeg не смог собрать MP4: {' '.join(lines[-3:])}"
+
+
+def moov_before_mdat(path: Path) -> bool:
+    """Проверить, что заголовок MP4 стоит в начале и файл можно отдавать сразу."""
+
+    try:
+        handle = path.open("rb")
+    except OSError:
+        return False
+    with handle:
+        seen_moov = False
+        while True:
+            header = handle.read(8)
+            if len(header) < 8:
+                return False
+            size = int.from_bytes(header[:4], "big")
+            kind = header[4:8]
+            header_len = 8
+            if size == 1:
+                extended = handle.read(8)
+                if len(extended) < 8:
+                    return False
+                size = int.from_bytes(extended, "big")
+                header_len = 16
+            if size == 0:
+                return seen_moov if kind == b"mdat" else False
+            if size < header_len:
+                return False
+            if kind == b"moov":
+                seen_moov = True
+            elif kind == b"mdat":
+                return seen_moov
+            handle.seek(size - header_len, 1)
 
 
 def _positive_float(value) -> float | None:
