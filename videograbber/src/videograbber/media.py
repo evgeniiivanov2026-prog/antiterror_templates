@@ -32,7 +32,10 @@ _QUALITY_HEIGHTS = {
     "720": 720,
     "480": 480,
     "360": 360,
+    "240": 240,
+    "144": 144,
 }
+MP3_BITRATE = "160k"
 
 
 @dataclass(frozen=True)
@@ -77,16 +80,54 @@ def parse_quality(value: str) -> int | None:
 
 
 def format_selector(max_height: int | None) -> str:
-    """Сначала искать H.264+AAC нужной высоты, затем любые дорожки."""
+    """Сначала искать H.264+AAC нужной высоты, затем любые дорожки.
 
-    height = "" if max_height is None else f"[height<={max_height}]"
+    У вертикального ролика ограничение качества — это ширина, а не высота кадра.
+    Поэтому после набора с ``height<=`` идёт такой же набор с ``width<=``.
+    """
+
+    if max_height is None:
+        return (
+            "bestvideo[vcodec^=avc1]+bestaudio[acodec^=mp4a]/"
+            "bestvideo[vcodec^=avc1]+bestaudio[acodec=aac]/"
+            "bestvideo[ext=mp4]+bestaudio[ext=m4a]/"
+            "bestvideo+bestaudio/best/best"
+        )
+    height = f"[height<={max_height}]"
+    portrait = f"[width<={max_height}]"
     compatible = (
         f"bestvideo{height}[vcodec^=avc1]+bestaudio[acodec^=mp4a]/"
         f"bestvideo{height}[vcodec^=avc1]+bestaudio[acodec=aac]/"
         f"bestvideo{height}[ext=mp4]+bestaudio[ext=m4a]"
     )
-    fallback = f"bestvideo{height}+bestaudio/best{height}/best"
-    return f"{compatible}/{fallback}"
+    portrait_compatible = (
+        f"bestvideo{portrait}[vcodec^=avc1]+bestaudio[acodec^=mp4a]/"
+        f"bestvideo{portrait}[vcodec^=avc1]+bestaudio[acodec=aac]/"
+        f"bestvideo{portrait}[ext=mp4]+bestaudio[ext=m4a]"
+    )
+    fallback = (
+        f"bestvideo{height}+bestaudio/bestvideo{portrait}+bestaudio/"
+        f"best{height}/best{portrait}/best"
+    )
+    return f"{compatible}/{portrait_compatible}/{fallback}"
+
+
+def audio_format_selector() -> str:
+    """Лучшая звуковая дорожка: сначала AAC в m4a, затем любой звук."""
+
+    return "bestaudio[ext=m4a]/bestaudio[acodec^=mp4a]/bestaudio/best"
+
+
+def scale_filter(info: MediaInfo, max_edge: int | None) -> str | None:
+    """Уменьшить кадр, если меньшая сторона больше выбранного качества."""
+
+    if not max_edge or not info.width or not info.height:
+        return None
+    if min(info.width, info.height) <= max_edge:
+        return None
+    if info.width <= info.height:
+        return f"scale={max_edge}:-2"
+    return f"scale=-2:{max_edge}"
 
 
 def sanitize_filename(name: str) -> str:
@@ -101,17 +142,22 @@ def sanitize_filename(name: str) -> str:
     return cleaned
 
 
-def resolve_output_path(output: Path | None, title: str, cwd: Path) -> Path:
-    filename = f"{sanitize_filename(title)}.mp4"
+def resolve_output_path(
+    output: Path | None,
+    title: str,
+    cwd: Path,
+    suffix: str = ".mp4",
+) -> Path:
+    filename = f"{sanitize_filename(title)}{suffix}"
     if output is None:
         return cwd / filename
     if output.exists() and output.is_dir():
         return output / filename
-    if output.suffix.lower() == ".mp4":
+    if output.suffix.lower() == suffix:
         return output
     if output.suffix == "":
         return output / filename
-    raise UserError("Укажите файл с расширением .mp4 или папку для сохранения.")
+    raise UserError(f"Укажите файл с расширением {suffix} или папку для сохранения.")
 
 
 def format_bytes(size: float) -> str:
@@ -149,7 +195,7 @@ def build_ffprobe_command(source: Path) -> list[str]:
     ]
 
 
-def parse_ffprobe(payload: dict) -> MediaInfo:
+def parse_ffprobe(payload: dict, *, require_video: bool = True) -> MediaInfo:
     videos: list[dict] = []
     audios: list[dict] = []
     for stream in payload.get("streams") or []:
@@ -160,7 +206,16 @@ def parse_ffprobe(payload: dict) -> MediaInfo:
         elif stream.get("codec_type") == "audio":
             audios.append(stream)
     if not videos:
-        raise MediaError("В скачанной записи нет видеопотока.")
+        if require_video:
+            raise MediaError("В скачанной записи нет видеопотока.")
+        container = payload.get("format") or {}
+        return MediaInfo(
+            duration=_positive_float(container.get("duration")),
+            width=None,
+            height=None,
+            video_codec="",
+            audio_codecs=tuple(str(stream.get("codec_name") or "") for stream in audios),
+        )
     video = videos[0]
     container = payload.get("format") or {}
     duration = _positive_float(container.get("duration"))
@@ -183,8 +238,16 @@ def stream_copy_plan(info: MediaInfo) -> tuple[bool, bool]:
     return copy_video, copy_audio
 
 
-def build_ffmpeg_command(source: Path, dest: Path, info: MediaInfo) -> list[str]:
+def build_ffmpeg_command(
+    source: Path,
+    dest: Path,
+    info: MediaInfo,
+    max_edge: int | None = None,
+) -> list[str]:
     copy_video, copy_audio = stream_copy_plan(info)
+    scale = scale_filter(info, max_edge)
+    if scale:
+        copy_video = False
     command = [
         "ffmpeg",
         "-hide_banner",
@@ -205,9 +268,10 @@ def build_ffmpeg_command(source: Path, dest: Path, info: MediaInfo) -> list[str]
         "0",
         "-map_chapters",
         "0",
-        "-c:v",
-        "copy" if copy_video else "libx264",
     ]
+    if scale:
+        command.extend(["-vf", scale])
+    command.extend(["-c:v", "copy" if copy_video else "libx264"])
     if not copy_video:
         command.extend(
             [
@@ -231,7 +295,7 @@ def build_ffmpeg_command(source: Path, dest: Path, info: MediaInfo) -> list[str]
     return command
 
 
-def probe_media(path: Path, runner) -> MediaInfo:
+def probe_media(path: Path, runner, *, require_video: bool = True) -> MediaInfo:
     result = runner(build_ffprobe_command(path))
     if result.returncode != 0:
         detail = (result.stderr or result.stdout or "ffprobe завершился с ошибкой").strip()
@@ -240,7 +304,7 @@ def probe_media(path: Path, runner) -> MediaInfo:
         payload = json.loads(result.stdout or "{}")
     except json.JSONDecodeError as exc:
         raise MediaError("ffprobe вернул непонятный ответ.") from exc
-    return parse_ffprobe(payload)
+    return parse_ffprobe(payload, require_video=require_video)
 
 
 def assemble_mp4(
@@ -249,12 +313,13 @@ def assemble_mp4(
     info: MediaInfo,
     on_progress,
     runner=None,
+    max_edge: int | None = None,
 ) -> Path:
     """Собрать временный MP4 рядом с назначением. Вызывающий сам ставит файл на место."""
 
     dest.parent.mkdir(parents=True, exist_ok=True)
     partial = dest.with_suffix(".part.mp4")
-    command = build_ffmpeg_command(source, partial, info)
+    command = build_ffmpeg_command(source, partial, info, max_edge)
     try:
         if runner is None:
             _run_ffmpeg(command, info.duration, on_progress)
@@ -264,6 +329,59 @@ def assemble_mp4(
                 raise MediaError(_ffmpeg_error(result.stderr))
         if not partial.exists() or partial.stat().st_size == 0:
             raise MediaError("ffmpeg не создал MP4-файл.")
+    except BaseException:
+        partial.unlink(missing_ok=True)
+        raise
+    return partial
+
+
+def build_mp3_command(source: Path, dest: Path) -> list[str]:
+    return [
+        "ffmpeg",
+        "-hide_banner",
+        "-nostdin",
+        "-nostats",
+        "-loglevel",
+        "error",
+        "-progress",
+        "pipe:1",
+        "-y",
+        "-i",
+        str(source),
+        "-vn",
+        "-map_metadata",
+        "0",
+        "-c:a",
+        "libmp3lame",
+        "-b:a",
+        MP3_BITRATE,
+        "-f",
+        "mp3",
+        str(dest),
+    ]
+
+
+def extract_mp3(
+    source: Path,
+    dest: Path,
+    duration: float | None,
+    on_progress,
+    runner=None,
+) -> Path:
+    """Собрать временный MP3 рядом с назначением. Вызывающий сам ставит файл на место."""
+
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    partial = dest.with_suffix(".part.mp3")
+    command = build_mp3_command(source, partial)
+    try:
+        if runner is None:
+            _run_ffmpeg(command, duration, on_progress, label="Сборка MP3")
+        else:
+            result = runner(command)
+            if result.returncode != 0:
+                raise MediaError(_ffmpeg_error(result.stderr, "MP3"))
+        if not partial.exists() or partial.stat().st_size == 0:
+            raise MediaError("ffmpeg не создал MP3-файл.")
     except BaseException:
         partial.unlink(missing_ok=True)
         raise
@@ -285,7 +403,12 @@ def parse_ffmpeg_time(value: str) -> float | None:
     return hours * 3600 + minutes * 60 + seconds
 
 
-def _run_ffmpeg(command: list[str], duration: float | None, on_progress) -> None:
+def _run_ffmpeg(
+    command: list[str],
+    duration: float | None,
+    on_progress,
+    label: str = "Сборка MP4",
+) -> None:
     process = subprocess.Popen(
         command,
         stdout=subprocess.PIPE,
@@ -315,20 +438,21 @@ def _run_ffmpeg(command: list[str], duration: float | None, on_progress) -> None
             if percent == last_percent:
                 continue
             last_percent = percent
-            on_progress(ProgressEvent(f"Сборка MP4: {percent}%", transient=True, percent=percent))
+            on_progress(ProgressEvent(f"{label}: {percent}%", transient=True, percent=percent))
     code = process.wait()
     thread.join()
     if code != 0:
-        raise MediaError(_ffmpeg_error("".join(stderr_lines)))
+        kind = "MP3" if label.endswith("MP3") else "MP4"
+        raise MediaError(_ffmpeg_error("".join(stderr_lines), kind))
     if on_progress is not None:
-        on_progress(ProgressEvent("Сборка MP4: 100%", transient=True, percent=100))
+        on_progress(ProgressEvent(f"{label}: 100%", transient=True, percent=100))
 
 
-def _ffmpeg_error(stderr: str | None) -> str:
+def _ffmpeg_error(stderr: str | None, kind: str = "MP4") -> str:
     lines = [line.strip() for line in (stderr or "").splitlines() if line.strip()]
     if not lines:
-        return "ffmpeg не смог собрать MP4."
-    return f"ffmpeg не смог собрать MP4: {' '.join(lines[-3:])}"
+        return f"ffmpeg не смог собрать {kind}."
+    return f"ffmpeg не смог собрать {kind}: {' '.join(lines[-3:])}"
 
 
 def moov_before_mdat(path: Path) -> bool:

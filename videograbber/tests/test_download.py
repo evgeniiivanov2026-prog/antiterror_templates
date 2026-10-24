@@ -31,7 +31,9 @@ def test_single_video_rejects_a_playlist():
 def test_clean_message_strips_ansi_and_error_prefix():
     assert _clean_message("\x1b[31mERROR: \x1b[0mVideo unavailable") == "Video unavailable"
     assert _clean_message("   ") == "Не удалось скачать видео."
-    assert "--cookies" in _clean_message("ERROR: Sign in to confirm you're not a bot")
+    bot = _clean_message("ERROR: Sign in to confirm you're not a bot")
+    assert "--cookies" in bot
+    assert "не от бота" in bot
 
 
 def test_locate_download_uses_reported_path_then_largest_file(tmp_path):

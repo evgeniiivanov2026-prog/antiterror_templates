@@ -10,6 +10,7 @@ from videograbber.media import (
     build_ffmpeg_command,
     format_bytes,
     format_duration,
+    audio_format_selector,
     format_selector,
     moov_before_mdat,
     parse_ffmpeg_time,
@@ -17,6 +18,7 @@ from videograbber.media import (
     parse_quality,
     resolve_output_path,
     sanitize_filename,
+    scale_filter,
     stream_copy_plan,
 )
 
@@ -24,7 +26,12 @@ from videograbber.media import (
 def test_format_selector_prefers_compatible_streams_at_requested_height():
     selected = format_selector(720)
     assert selected.startswith("bestvideo[height<=720][vcodec^=avc1]+bestaudio[acodec^=mp4a]/")
-    assert selected.endswith("bestvideo[height<=720]+bestaudio/best[height<=720]/best")
+    assert "bestvideo[width<=720][vcodec^=avc1]+bestaudio[acodec^=mp4a]/" in selected
+    assert selected.endswith("best[height<=720]/best[width<=720]/best")
+
+
+def test_audio_format_selector_prefers_m4a():
+    assert audio_format_selector().startswith("bestaudio[ext=m4a]/")
 
 
 def test_format_selector_without_limit_still_has_fallback():
@@ -48,8 +55,21 @@ def test_moov_before_mdat_reads_only_the_header_order(tmp_path):
 def test_parse_quality():
     assert parse_quality("best") is None
     assert parse_quality("1080") == 1080
+    assert parse_quality("144") == 144
     with pytest.raises(UserError):
         parse_quality("999")
+
+
+def test_scale_filter_uses_the_shorter_side():
+    landscape = MediaInfo(4, 1920, 1080, "h264", ("aac",))
+    portrait = MediaInfo(4, 1080, 1920, "h264", ("aac",))
+    assert scale_filter(landscape, 1080) is None
+    assert scale_filter(landscape, 720) == "scale=-2:720"
+    assert scale_filter(portrait, 1080) is None
+    assert scale_filter(portrait, 720) == "scale=720:-2"
+    command = build_ffmpeg_command(Path("in.mp4"), Path("out.mp4"), landscape, 720)
+    assert command[command.index("-vf") + 1] == "scale=-2:720"
+    assert command[command.index("-c:v") + 1] == "libx264"
 
 
 @pytest.mark.parametrize(

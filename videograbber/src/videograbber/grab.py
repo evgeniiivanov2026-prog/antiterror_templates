@@ -10,16 +10,19 @@ from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from videograbber.download import download_video
+from videograbber.download import download_audio, download_video
 from videograbber.errors import UserError
 from videograbber.media import (
+    MediaError,
     ProgressEvent,
     assemble_mp4,
+    extract_mp3,
     moov_before_mdat,
     parse_quality,
     probe_media,
     require_tools,
     resolve_output_path,
+    scale_filter,
     stream_copy_plan,
 )
 
@@ -35,6 +38,7 @@ class GrabResult:
     video_codec: str
     audio_codec: str | None
     remuxed: bool
+    kind: str = "video"
 
 
 def grab(
@@ -69,6 +73,8 @@ def grab(
                 "Добавьте --force, чтобы перезаписать его."
             )
         copy_video, copy_audio = stream_copy_plan(inspected)
+        if scale_filter(inspected, max_height):
+            copy_video = False
         remuxed = copy_video and copy_audio
         reusable = (
             remuxed
@@ -80,6 +86,8 @@ def grab(
                 action = "Файл уже MP4, сохраняю"
             elif remuxed:
                 action = "Собираю MP4: копирую дорожки"
+            elif scale_filter(inspected, max_height):
+                action = "Собираю MP4: уменьшаю до выбранного качества"
             else:
                 action = "Собираю MP4: привожу к H.264 и AAC"
             on_progress(ProgressEvent(action))
@@ -94,6 +102,7 @@ def grab(
                 inspected,
                 on_progress,
                 runner=runner,
+                max_edge=max_height,
             )
             try:
                 packed = probe_media(partial, probe_runner)
@@ -112,6 +121,72 @@ def grab(
         video_codec=packed.video_codec,
         audio_codec=audio,
         remuxed=remuxed,
+    )
+
+
+def grab_audio(
+    url: str,
+    output: Path | None = None,
+    *,
+    force: bool = False,
+    cookies: Path | None = None,
+    directory: Path | None = None,
+    on_progress=None,
+    downloader=None,
+    runner=None,
+) -> GrabResult:
+    """Скачать звук url и записать один MP3."""
+
+    require_tools()
+    cleaned = validate_url(url)
+    if cookies is not None and not cookies.is_file():
+        raise UserError(f"Файл cookies не найден: {cookies}")
+    fetch = downloader or download_audio
+    probe_runner = runner or default_runner
+    download_kwargs = {} if cookies is None else {"cookiefile": cookies}
+    with tempfile.TemporaryDirectory(prefix="videograbber-") as temporary:
+        source = fetch(cleaned, Path(temporary), on_progress, **download_kwargs)
+        destination = resolve_output_path(
+            output,
+            source.title,
+            directory or Path.cwd(),
+            suffix=".mp3",
+        )
+        if destination.exists() and not force:
+            raise UserError(
+                f"Файл уже существует: {destination}. "
+                "Добавьте --force, чтобы перезаписать его."
+            )
+        if on_progress is not None:
+            on_progress(ProgressEvent("Собираю MP3"))
+        partial = extract_mp3(
+            source.path,
+            destination,
+            source.duration,
+            on_progress,
+            runner=runner,
+        )
+        try:
+            probed = probe_media(partial, probe_runner, require_video=False)
+            duration = probed.duration or source.duration
+        except MediaError:
+            duration = source.duration
+        try:
+            os.replace(partial, destination)
+        except Exception:
+            partial.unlink(missing_ok=True)
+            raise
+    return GrabResult(
+        path=destination.resolve(),
+        title=source.title,
+        size=destination.stat().st_size,
+        duration=duration,
+        width=None,
+        height=None,
+        video_codec="",
+        audio_codec="mp3",
+        remuxed=False,
+        kind="audio",
     )
 
 

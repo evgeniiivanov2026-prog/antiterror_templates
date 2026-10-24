@@ -16,8 +16,11 @@ from pathlib import Path
 from urllib.parse import quote, unquote, urlsplit
 
 from videograbber.errors import UserError, VideograbberError
-from videograbber.grab import GrabResult, grab, validate_url
-from videograbber.media import ProgressEvent, format_bytes, format_duration, parse_quality
+from videograbber.grab import GrabResult, grab, grab_audio
+from videograbber.media import ProgressEvent, format_bytes, format_duration
+from videograbber.youtube import lookup_youtube, normalize_youtube_url
+
+_WEB_QUALITIES = ("1080", "720", "480", "360", "240", "144", "audio")
 
 _PAGE = files("videograbber").joinpath("web_page.html").read_bytes()
 _MAX_BODY = 65536
@@ -35,6 +38,7 @@ class Job:
         self.message = "Начинаю"
         self.percent: int | None = None
         self.filename = "video.mp4"
+        self.media_type = "video/mp4"
         self.detail = ""
         self.path: Path | None = None
         self._condition = threading.Condition()
@@ -51,6 +55,7 @@ class Job:
             self.status = "done"
             self.path = result.path
             self.filename = result.path.name
+            self.media_type = "audio/mpeg" if result.kind == "audio" else "video/mp4"
             self.percent = 100
             self.message = "Файл готов"
             self.detail = _describe(result)
@@ -84,16 +89,29 @@ class Job:
 
 
 class App:
-    def __init__(self, grabber, storage: Path, max_jobs: int) -> None:
+    def __init__(self, grabber, audio_grabber, inspector, storage: Path, max_jobs: int) -> None:
         self.grabber = grabber
+        self.audio_grabber = audio_grabber
+        self.inspector = inspector
         self.storage = storage
         self.max_jobs = max_jobs
         self.jobs: dict[str, Job] = {}
         self._lock = threading.Lock()
 
+    def lookup(self, url: str) -> dict:
+        cleaned = normalize_youtube_url(url)
+        payload = self.inspector(cleaned)
+        if not isinstance(payload, dict) or not isinstance(payload.get("options"), list):
+            raise VideograbberError("Не удалось прочитать ролик.")
+        body = dict(payload)
+        body["url"] = cleaned
+        return body
+
     def create(self, url: str, quality: str) -> Job:
-        cleaned = validate_url(url)
-        parse_quality(quality)
+        cleaned = normalize_youtube_url(url)
+        if quality not in _WEB_QUALITIES:
+            allowed = ", ".join(_WEB_QUALITIES)
+            raise UserError(f"Неизвестное качество {quality!r}. Доступно: {allowed}.")
         with self._lock:
             running = sum(job.status == "running" for job in self.jobs.values())
             if running >= self.max_jobs:
@@ -116,7 +134,10 @@ class App:
         folder = self.storage / job.id
         folder.mkdir(parents=True, exist_ok=True)
         try:
-            result = self.grabber(url, output=folder, quality=quality, on_progress=job.update)
+            if quality == "audio":
+                result = self.audio_grabber(url, output=folder, on_progress=job.update)
+            else:
+                result = self.grabber(url, output=folder, quality=quality, on_progress=job.update)
         except VideograbberError as exc:
             job.fail(str(exc))
             shutil.rmtree(folder, ignore_errors=True)
@@ -150,6 +171,9 @@ class App:
                     return
                 if self.command == "GET" and path == "/favicon.ico":
                     self._empty()
+                    return
+                if self.command == "POST" and path == "/api/lookup":
+                    self._lookup()
                     return
                 if self.command == "POST" and path == "/api/jobs":
                     self._create()
@@ -190,28 +214,29 @@ class App:
                 self.send_header("Content-Length", "0")
                 self.end_headers()
 
+            def _lookup(self) -> None:
+                payload = self._payload()
+                if payload is None:
+                    return
+                try:
+                    card = app.lookup(str(payload.get("url") or ""))
+                except UserError as exc:
+                    self._json(400, {"error": str(exc)})
+                    return
+                except VideograbberError as exc:
+                    self._json(422, {"error": str(exc)})
+                    return
+                self._json(200, card)
+
             def _create(self) -> None:
-                if self.headers.get("X-Videograbber") != "1":
-                    self._json(403, {"error": "Запрос отклонён."})
+                payload = self._payload()
+                if payload is None:
                     return
                 try:
-                    length = int(self.headers.get("Content-Length") or "0")
-                except ValueError:
-                    self._json(400, {"error": "Некорректный запрос."})
-                    return
-                if length <= 0 or length > _MAX_BODY:
-                    self._json(400, {"error": "Некорректный запрос."})
-                    return
-                try:
-                    payload = json.loads(self.rfile.read(length).decode("utf-8"))
-                except (UnicodeError, json.JSONDecodeError):
-                    self._json(400, {"error": "Нужен JSON со ссылкой."})
-                    return
-                if not isinstance(payload, dict):
-                    self._json(400, {"error": "Нужен JSON со ссылкой."})
-                    return
-                try:
-                    job = app.create(str(payload.get("url") or ""), str(payload.get("quality") or "best"))
+                    job = app.create(
+                        str(payload.get("url") or ""),
+                        str(payload.get("quality") or ""),
+                    )
                 except UserError as exc:
                     self._json(400, {"error": str(exc)})
                     return
@@ -221,6 +246,28 @@ class App:
                 body = job.snapshot()
                 body["events"] = f"/api/jobs/{job.id}/events"
                 self._json(202, body)
+
+            def _payload(self) -> dict | None:
+                if self.headers.get("X-Videograbber") != "1":
+                    self._json(403, {"error": "Запрос отклонён."})
+                    return None
+                try:
+                    length = int(self.headers.get("Content-Length") or "0")
+                except ValueError:
+                    self._json(400, {"error": "Некорректный запрос."})
+                    return None
+                if length <= 0 or length > _MAX_BODY:
+                    self._json(400, {"error": "Некорректный запрос."})
+                    return None
+                try:
+                    payload = json.loads(self.rfile.read(length).decode("utf-8"))
+                except (UnicodeError, json.JSONDecodeError):
+                    self._json(400, {"error": "Нужен JSON со ссылкой."})
+                    return None
+                if not isinstance(payload, dict):
+                    self._json(400, {"error": "Нужен JSON со ссылкой."})
+                    return None
+                return payload
 
             def _events(self, job: Job) -> None:
                 self.send_response(200)
@@ -263,7 +310,7 @@ class App:
                     return
                 size = path.stat().st_size
                 self.send_response(200)
-                self.send_header("Content-Type", "video/mp4")
+                self.send_header("Content-Type", job.media_type)
                 self.send_header("Content-Length", str(size))
                 self.send_header("Content-Disposition", _content_disposition(job.filename))
                 self.send_header("Cache-Control", "no-store")
@@ -294,17 +341,43 @@ def make_server(
     grabber=None,
     storage: Path | None = None,
     max_jobs: int = 2,
+    inspector=None,
+    audio_grabber=None,
+    cookies: Path | None = None,
 ) -> WebServer:
     root = storage or Path(tempfile.mkdtemp(prefix="videograbber-web-"))
     root.mkdir(parents=True, exist_ok=True)
-    app = App(grabber or grab, root, max_jobs)
+
+    def video(url, output=None, quality="best", on_progress=None, **kwargs):
+        return grab(
+            url,
+            output=output,
+            quality=quality,
+            on_progress=on_progress,
+            cookies=cookies,
+            **kwargs,
+        )
+
+    def audio(url, output=None, on_progress=None, **kwargs):
+        return grab_audio(url, output=output, on_progress=on_progress, cookies=cookies, **kwargs)
+
+    def inspect(url):
+        return lookup_youtube(url, cookiefile=cookies)
+
+    app = App(
+        grabber or video,
+        audio_grabber or audio,
+        inspector or inspect,
+        root,
+        max_jobs,
+    )
     server = WebServer((host, port), app.build_handler())
     server.app = app
     return server
 
 
-def serve(host: str = "127.0.0.1", port: int = 8765) -> None:
-    server = make_server(host, port)
+def serve(host: str = "127.0.0.1", port: int = 8765, cookies: Path | None = None) -> None:
+    server = make_server(host, port, cookies=cookies)
     bound_port = server.server_address[1]
     shown = "127.0.0.1" if host in {"0.0.0.0", "::"} else host
     print(f"Веб-версия videograbber: http://{shown}:{bound_port}", flush=True)
@@ -317,13 +390,21 @@ def serve(host: str = "127.0.0.1", port: int = 8765) -> None:
 def run_web(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="videograbber web",
-        description="Локальная страница: ссылка на видео превращается в MP4.",
+        description="Локальная страница: ссылка на ролик YouTube превращается в MP4 или MP3.",
     )
     parser.add_argument("--host", default="127.0.0.1", help="Адрес, по умолчанию только этот компьютер")
     parser.add_argument("--port", type=int, default=8765, help="Порт, по умолчанию 8765")
+    parser.add_argument(
+        "--cookies",
+        type=Path,
+        help="Файл cookies Netscape, если YouTube просит подтвердить, что вы не бот",
+    )
     args = parser.parse_args(argv)
+    if args.cookies is not None and not args.cookies.is_file():
+        print(f"Файл cookies не найден: {args.cookies}", file=sys.stderr)
+        return 2
     try:
-        serve(args.host, args.port)
+        serve(args.host, args.port, cookies=args.cookies)
     except KeyboardInterrupt:
         print("\nОстановлено.", file=sys.stderr)
         return 130
@@ -334,6 +415,8 @@ def run_web(argv: list[str] | None = None) -> int:
 
 
 def _describe(result: GrabResult) -> str:
+    if result.kind == "audio":
+        return f"{format_bytes(result.size)}, {format_duration(result.duration)}, MP3"
     if result.width and result.height:
         resolution = f"{result.width}×{result.height}"
     else:
