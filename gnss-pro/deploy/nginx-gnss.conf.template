@@ -1,0 +1,39 @@
+server {
+    listen 8080;
+    listen [::]:8080;
+    server_name gnss.pro localhost 127.0.0.1;
+    root __ROOT__/public;
+    index index.php;
+    client_max_body_size 32m;
+    charset utf-8;
+
+    add_header X-Content-Type-Options nosniff always;
+    add_header Referrer-Policy strict-origin-when-cross-origin always;
+    add_header X-Frame-Options SAMEORIGIN always;
+
+    location = /xmlrpc.php {
+        deny all;
+    }
+
+    location ~* /uploads/.*\.php$ {
+        deny all;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.php?$args;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:__SOCK__;
+    }
+
+    location ~* \.(?:js|css|png|jpg|jpeg|gif|svg|woff2|ico)$ {
+        add_header Cache-Control "public, max-age=604800";
+        try_files $uri =404;
+    }
+
+    location ~ /\. {
+        deny all;
+    }
+}

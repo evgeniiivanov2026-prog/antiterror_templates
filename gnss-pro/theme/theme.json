@@ -1,0 +1,57 @@
+{
+  "$schema": "https://schemas.wp.org/wp/6.7/theme.json",
+  "version": 3,
+  "settings": {
+    "appearanceTools": false,
+    "layout": {
+      "contentSize": "720px",
+      "wideSize": "1120px"
+    },
+    "color": {
+      "defaultPalette": false,
+      "palette": [
+        { "slug": "ink", "color": "#18211e", "name": "Чернила" },
+        { "slug": "paper", "color": "#f2eee6", "name": "Бумага" },
+        { "slug": "teal", "color": "#0e4a45", "name": "Глубокий сине-зелёный" },
+        { "slug": "copper", "color": "#8a3816", "name": "Медь" }
+      ]
+    },
+    "typography": {
+      "fluid": false,
+      "fontFamilies": [
+        {
+          "slug": "literata",
+          "name": "Literata",
+          "fontFamily": "Literata, Georgia, serif"
+        },
+        {
+          "slug": "manrope",
+          "name": "Manrope",
+          "fontFamily": "Manrope, sans-serif"
+        }
+      ]
+    }
+  },
+  "styles": {
+    "color": {
+      "background": "#f2eee6",
+      "text": "#18211e"
+    },
+    "typography": {
+      "fontFamily": "Literata, Georgia, serif",
+      "fontSize": "1.125rem",
+      "lineHeight": "1.65"
+    },
+    "elements": {
+      "link": {
+        "color": { "text": "#0e4a45" }
+      },
+      "heading": {
+        "typography": {
+          "fontFamily": "Literata, Georgia, serif",
+          "fontWeight": "620"
+        }
+      }
+    }
+  }
+}

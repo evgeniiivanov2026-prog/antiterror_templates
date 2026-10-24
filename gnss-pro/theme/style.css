@@ -1,0 +1,13 @@
+/*
+Theme Name: GNSS.PRO
+Theme URI: https://gnss.pro
+Author: Редакция GNSS.PRO
+Description: Редакционная тема журнала о ГЛОНАСС и спутниковой навигации. Бумажная вёрстка, тёмный инструментальный колонтитул, материалы по открытым источникам.
+Version: 1.0.0
+Requires at least: 6.4
+Tested up to: 6.7
+Requires PHP: 8.1
+Text Domain: gnss-pro
+*/
+
+/* Стили вынесены в assets/css/main.css и подключаются из functions.php. */

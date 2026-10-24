@@ -1,0 +1,4 @@
+public/
+.local-credentials
+*.log
+.DS_Store
