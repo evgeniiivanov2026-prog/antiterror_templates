@@ -17,6 +17,12 @@ if (!defined('ABSPATH')) {
 </head>
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
+<div class="starfield" aria-hidden="true">
+    <span class="stars stars-far"></span>
+    <span class="stars stars-near"></span>
+    <span class="aurora"></span>
+    <span class="meteor"></span>
+</div>
 <a class="skip-link" href="#content">К содержанию</a>
 <div class="topline">
     <p>Журнал о спутниковой навигации</p>

@@ -39,7 +39,7 @@ add_action('wp_head', function (): void {
     $image = get_template_directory_uri() . '/assets/img/og.png';
 
     echo '<meta name="description" content="' . esc_attr($description) . '">' . "\n";
-    echo '<meta name="theme-color" content="#072421">' . "\n";
+    echo '<meta name="theme-color" content="#070b14">' . "\n";
     echo '<link rel="icon" href="' . esc_url(get_template_directory_uri() . '/assets/img/favicon.svg') . '" type="image/svg+xml">' . "\n";
     echo '<meta property="og:locale" content="ru_RU">' . "\n";
     echo '<meta property="og:site_name" content="GNSS.PRO">' . "\n";

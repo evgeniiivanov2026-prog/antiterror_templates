@@ -10,10 +10,10 @@
     "color": {
       "defaultPalette": false,
       "palette": [
-        { "slug": "ink", "color": "#18211e", "name": "Чернила" },
-        { "slug": "paper", "color": "#f2eee6", "name": "Бумага" },
-        { "slug": "teal", "color": "#0e4a45", "name": "Глубокий сине-зелёный" },
-        { "slug": "copper", "color": "#8a3816", "name": "Медь" }
+        { "slug": "ink", "color": "#e8eef8", "name": "Свет звёзд" },
+        { "slug": "paper", "color": "#070b14", "name": "Космос" },
+        { "slug": "teal", "color": "#9ae7ff", "name": "Сигнал" },
+        { "slug": "copper", "color": "#f0c56a", "name": "Звезда" }
       ]
     },
     "typography": {
@@ -34,8 +34,8 @@
   },
   "styles": {
     "color": {
-      "background": "#f2eee6",
-      "text": "#18211e"
+      "background": "#070b14",
+      "text": "#e8eef8"
     },
     "typography": {
       "fontFamily": "Literata, Georgia, serif",
@@ -44,7 +44,7 @@
     },
     "elements": {
       "link": {
-        "color": { "text": "#0e4a45" }
+        "color": { "text": "#9ae7ff" }
       },
       "heading": {
         "typography": {

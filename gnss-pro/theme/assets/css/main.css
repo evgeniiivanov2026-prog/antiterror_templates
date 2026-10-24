@@ -1,16 +1,17 @@
 @import url("fonts.css");
 
 :root {
-  --paper: #f2eee6;
-  --paper-deep: #e4dccb;
-  --ink: #18211e;
-  --muted: #3d4b46;
-  --line: rgba(24, 33, 30, 0.14);
-  --line-strong: rgba(24, 33, 30, 0.4);
-  --teal: #0e4a45;
-  --teal-deep: #072421;
-  --copper: #8a3816;
-  --brass: #e3b17a;
+  --void: #070b14;
+  --paper: #e8eef8;
+  --paper-deep: rgba(12, 22, 40, 0.9);
+  --ink: #e8eef8;
+  --muted: #b7c5d8;
+  --line: rgba(170, 205, 255, 0.16);
+  --line-strong: rgba(170, 205, 255, 0.4);
+  --teal: #9ae7ff;
+  --teal-deep: #07111f;
+  --copper: #f0c56a;
+  --brass: #f0c56a;
   --sans: Manrope, "Segoe UI", sans-serif;
   --serif: Literata, Georgia, serif;
   --display: Unbounded, Manrope, sans-serif;
@@ -33,13 +34,83 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--paper);
+  background: var(--void);
   color: var(--ink);
   font-family: var(--serif);
   font-size: 1.0625rem;
   line-height: 1.6;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+}
+
+.starfield {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% -8%, rgba(70, 120, 210, 0.28), transparent 52%),
+    radial-gradient(ellipse at 88% 8%, rgba(240, 197, 106, 0.1), transparent 32%),
+    var(--void);
+}
+
+.stars,
+.aurora,
+.meteor {
+  position: absolute;
+  inset: -15%;
+}
+
+.stars-far,
+.stars-near {
+  background-repeat: repeat;
+}
+
+.stars-far {
+  background-image:
+    radial-gradient(1px 1px at 12px 18px, #fff, transparent),
+    radial-gradient(1px 1px at 70px 90px, rgba(255, 255, 255, 0.75), transparent),
+    radial-gradient(1.4px 1.4px at 140px 40px, rgba(190, 220, 255, 0.9), transparent),
+    radial-gradient(1px 1px at 190px 140px, rgba(255, 255, 255, 0.55), transparent),
+    radial-gradient(1px 1px at 40px 160px, rgba(240, 197, 106, 0.8), transparent);
+  background-size: 230px 200px;
+  animation: star-drift 90s linear infinite;
+}
+
+.stars-near {
+  background-image:
+    radial-gradient(1.6px 1.6px at 30px 50px, #fff, transparent),
+    radial-gradient(1.2px 1.2px at 120px 20px, rgba(154, 231, 255, 0.95), transparent),
+    radial-gradient(2px 2px at 180px 110px, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1px 1px at 80px 150px, rgba(240, 197, 106, 0.9), transparent);
+  background-size: 280px 220px;
+  animation: star-drift 55s linear infinite reverse, star-twinkle 4.8s ease-in-out infinite;
+}
+
+.aurora {
+  inset: 0;
+  background: radial-gradient(ellipse at 30% 80%, rgba(40, 90, 180, 0.18), transparent 46%);
+  animation: aurora-shift 18s ease-in-out infinite;
+}
+
+.meteor {
+  inset: auto;
+  top: 18%;
+  left: -12%;
+  width: 140px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #fff 70%, transparent);
+  opacity: 0;
+  animation: meteor 16s linear infinite;
+}
+
+.topline,
+.site-header,
+main,
+.site-footer {
+  position: relative;
+  z-index: 1;
 }
 
 main {
@@ -66,8 +137,8 @@ a:hover {
 }
 
 ::selection {
-  background: #e3b17a;
-  color: var(--ink);
+  background: #f0c56a;
+  color: #1a1408;
 }
 
 h1, h2, h3, p {
@@ -134,10 +205,10 @@ h1, h2 {
   position: sticky;
   top: 0;
   z-index: 30;
-  background: rgba(7, 36, 33, 0.96);
+  background: rgba(6, 10, 18, 0.78);
   color: var(--paper);
-  box-shadow: inset 0 3px 0 var(--brass);
-  backdrop-filter: blur(12px);
+  box-shadow: inset 0 2px 0 rgba(154, 231, 255, 0.7);
+  backdrop-filter: blur(16px);
 }
 
 .site-header a {
@@ -168,6 +239,8 @@ h1, h2 {
   width: 2.1rem;
   height: 2.1rem;
   display: block;
+  transform-origin: center;
+  animation: orbit-turn 22s linear infinite;
 }
 
 .logo-type {
@@ -254,7 +327,7 @@ h1, h2 {
 
 .search-form input[type="search"] {
   width: min(100%, 18rem);
-  background: #fbf8f3;
+  background: rgba(8, 14, 28, 0.55);
   color: var(--ink);
   border: 0;
   border-bottom: 1px solid var(--line-strong);
@@ -364,37 +437,71 @@ select {
   justify-content: center;
   min-height: 2.8rem;
   padding: 0.55rem 0.95rem;
-  background: var(--teal-deep);
-  color: var(--paper);
+  background: linear-gradient(180deg, #c8f6ff, #5ad4ef);
+  color: #06202a;
   text-decoration: none;
   font-family: var(--sans);
   font-size: 0.92rem;
   font-weight: 700;
   border: 0;
   cursor: pointer;
+  box-shadow: 0 0 22px rgba(90, 212, 239, 0.28);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .button:hover {
-  background: var(--copper);
-  color: #fff;
+  background: var(--brass);
+  color: #1a1408;
+  transform: translateY(-1px);
 }
 
 .button.secondary {
   background: transparent;
   color: var(--ink);
-  box-shadow: inset 0 0 0 1px var(--line-strong);
+  box-shadow: inset 0 0 0 1px rgba(154, 231, 255, 0.45);
 }
 
 .button.secondary:hover {
-  background: var(--ink);
-  color: var(--paper);
+  background: rgba(154, 231, 255, 0.12);
+  color: var(--ink);
 }
 
 .orbit-card {
   margin: 0;
-  background: var(--teal-deep);
+  background:
+    radial-gradient(circle at 50% 46%, rgba(50, 130, 190, 0.28), transparent 58%),
+    rgba(8, 14, 28, 0.5);
   color: var(--paper);
   padding: 1rem 1rem 0.9rem;
+  border: 1px solid rgba(154, 231, 255, 0.28);
+  box-shadow: 0 0 48px rgba(60, 130, 220, 0.16);
+  animation: rise 1.05s ease 0.12s both;
+}
+
+.hero > div {
+  animation: rise 0.85s ease both;
+}
+
+.orbit-spin {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: orbit-turn 70s linear infinite;
+}
+
+.sat {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sat-pulse 3.4s ease-in-out infinite;
+}
+
+.sat:nth-child(2n) {
+  animation-delay: -1.1s;
+}
+
+.earth-glow {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: earth-breathe 6.5s ease-in-out infinite;
 }
 
 .orbit-card svg {
@@ -436,6 +543,8 @@ select {
   font-size: clamp(1.35rem, 2vw, 1.85rem);
   letter-spacing: -0.03em;
   line-height: 1.1;
+  color: var(--brass);
+  text-shadow: 0 0 18px rgba(240, 197, 106, 0.28);
 }
 
 .facts span {
@@ -871,7 +980,7 @@ select {
   padding: 0.65rem 0.7rem;
   border: 1px solid var(--line-strong);
   border-radius: 0;
-  background: #fbf8f3;
+  background: rgba(8, 14, 28, 0.72);
   color: var(--ink);
 }
 
@@ -911,11 +1020,12 @@ select {
 }
 
 .site-footer {
-  background: var(--teal-deep);
-  color: rgba(242, 238, 230, 0.82);
+  background: rgba(5, 8, 16, 0.9);
+  color: var(--muted);
   padding: 2.2rem 0 1.2rem;
   font-family: var(--sans);
   font-size: 0.92rem;
+  border-top: 1px solid rgba(154, 231, 255, 0.22);
 }
 
 .site-footer a {
@@ -1067,13 +1177,68 @@ select {
   }
 }
 
+@keyframes star-drift {
+  to { transform: translate3d(-8%, -6%, 0); }
+}
+
+@keyframes star-twinkle {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@keyframes aurora-shift {
+  0%, 100% { transform: translate3d(0, 0, 0); opacity: 0.7; }
+  50% { transform: translate3d(4%, -2%, 0); opacity: 1; }
+}
+
+@keyframes meteor {
+  0% { transform: translate3d(0, 0, 0) rotate(20deg); opacity: 0; }
+  4% { opacity: 0.95; }
+  12% { transform: translate3d(120vw, 38vh, 0) rotate(20deg); opacity: 0; }
+  100% { opacity: 0; }
+}
+
+@keyframes orbit-turn {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes sat-pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+@keyframes earth-breathe {
+  0%, 100% { opacity: 0.82; }
+  50% { opacity: 1; }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
+
+  .stars-far,
+  .stars-near,
+  .aurora,
+  .meteor,
+  .logo-mark,
+  .orbit-spin,
+  .sat,
+  .earth-glow,
+  .hero > div,
+  .orbit-card,
+  .button {
+    animation: none;
+  }
 }
 
 @media print {
+  .starfield,
   .topline,
   .site-header,
   .site-footer,
