@@ -6,149 +6,275 @@
   <title>Скачать видео с YouTube и Rutube</title>
   <style>
     :root {
-      color-scheme: light;
-      --ink: #17202a;
-      --muted: #5c6770;
-      --paper: #eef2f4;
-      --card: #ffffff;
-      --line: #d5dee3;
-      --green: #0c7a45;
-      --green-ink: #ffffff;
-      --ok: #0c7a45;
-      --danger: #9d2c2c;
-      --track: #e4ece8;
+      color-scheme: dark;
+      --bg: #0c0e12;
+      --ink: #f6f3ec;
+      --muted: #b7b1a6;
+      --line: rgba(246, 243, 236, 0.12);
+      --field: #12151b;
+      --panel: #171b22;
+      --copper: #e7a15a;
+      --copper-ink: #1b130c;
+      --danger: #ffb4a8;
+      --ok: #b7e3c4;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       min-height: 100vh;
-      background: var(--paper);
       color: var(--ink);
-      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      background:
+        radial-gradient(980px 520px at 8% -12%, rgba(231, 161, 90, 0.2), transparent 58%),
+        radial-gradient(820px 480px at 100% 110%, rgba(118, 156, 186, 0.16), transparent 52%),
+        var(--bg);
+      font-family: "Segoe UI", "Helvetica Neue", system-ui, sans-serif;
       font-size: 16px;
       line-height: 1.45;
     }
     main {
-      width: min(42rem, calc(100% - 2rem));
-      margin: 2.25rem auto 3rem;
-      padding: 1.4rem 1.4rem 1.2rem;
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 14px;
+      width: min(68rem, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 2.4rem 0 3.2rem;
+    }
+    body:has(#card[hidden]) main {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .kicker {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0 0 0.85rem;
+      color: var(--muted);
+      font-size: 0.78rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    .dot {
+      width: 0.48rem;
+      height: 0.48rem;
+      border-radius: 50%;
+      background: var(--copper);
+      box-shadow: 0 0 0 0 rgba(231, 161, 90, 0.55);
+      animation: pulse 2.6s ease-out infinite;
     }
     h1 {
       margin: 0;
-      font-size: 1.7rem;
-      letter-spacing: -0.03em;
+      max-width: 16ch;
+      font-family: Palatino, "Palatino Linotype", "Iowan Old Style", Georgia, "Liberation Serif", serif;
+      font-size: clamp(2.5rem, 6vw, 4.6rem);
+      font-weight: 560;
+      letter-spacing: -0.035em;
+      line-height: 0.96;
     }
-    h2 {
-      margin: 0;
+    .lead {
+      max-width: 38rem;
+      margin: 1rem 0 0;
+      color: var(--muted);
       font-size: 1.05rem;
-      line-height: 1.35;
     }
-    .lead { margin: 0.45rem 0 1.1rem; color: var(--muted); }
-    label { display: block; font-weight: 650; margin-bottom: 0.35rem; }
-    input, button, a.button { width: 100%; font: inherit; }
+    form { margin-top: 1.8rem; }
+    label {
+      display: block;
+      margin-bottom: 0.45rem;
+      font-size: 0.92rem;
+      font-weight: 650;
+    }
+    .row { display: grid; gap: 0.65rem; }
+    input, button, a.button { font: inherit; }
     input {
-      padding: 0.75rem 0.8rem;
-      border: 1px solid #9aaba8;
-      border-radius: 10px;
-      background: #fff;
+      width: 100%;
+      padding: 0.95rem 1rem;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--field);
+      color: var(--ink);
     }
-    .examples { margin: 0.45rem 0 0.9rem; color: var(--muted); font-size: 0.92rem; }
-    button, a.button {
-      display: inline-block;
-      padding: 0.78rem 1rem;
+    input::placeholder { color: #8f897f; }
+    .examples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin: 0.7rem 0 0;
+    }
+    .examples span {
+      padding: 0.22rem 0.55rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    #submit, a.button {
       border: 0;
-      border-radius: 10px;
-      background: var(--green);
-      color: var(--green-ink);
+      border-radius: 14px;
+      cursor: pointer;
       text-align: center;
       text-decoration: none;
-      cursor: pointer;
     }
-    button:disabled { cursor: wait; opacity: 0.72; }
-    button:focus-visible, a.button:focus-visible, input:focus {
-      outline: 2px solid var(--green);
-      outline-offset: 2px;
-    }
-    #card { margin-top: 1.25rem; padding-top: 1.15rem; border-top: 1px solid var(--line); }
-    #card[hidden], #save[hidden] { display: none; }
-    .head {
-      display: grid;
-      grid-template-columns: 168px 1fr;
-      gap: 0.9rem;
-      align-items: center;
-      margin-bottom: 0.9rem;
-    }
-    img {
+    #submit {
       width: 100%;
-      aspect-ratio: 16 / 9;
-      object-fit: contain;
-      background: #14181d;
-      border-radius: 8px;
+      padding: 0.95rem 1.15rem;
+      background: var(--copper);
+      color: var(--copper-ink);
+      font-weight: 700;
     }
-    .meta, .hint, footer { color: var(--muted); }
-    .meta { margin: 0.3rem 0 0; }
-    .ok { margin: 0.35rem 0 0; color: var(--ok); font-size: 0.92rem; }
-    .options { margin: 0.2rem 0 0.4rem; }
+    #submit:hover:not(:disabled) { background: #f0b06c; }
+    button:disabled { cursor: wait; opacity: 0.62; }
+    button:focus-visible, a.button:focus-visible, input:focus-visible {
+      outline: 2px solid var(--copper);
+      outline-offset: 3px;
+    }
+    #status { margin: 0.9rem 0 0; color: var(--ink); }
+    #status:empty { display: none; }
+    #status.error { color: var(--danger); }
+    #card {
+      margin-top: 1.6rem;
+      padding: 0.85rem;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: rgba(18, 21, 27, 0.88);
+      animation: rise 0.45s ease;
+    }
+    #card[hidden], #save[hidden], #thumb[hidden] { display: none; }
+    .stage {
+      display: flex;
+      justify-content: center;
+    }
+    .stage:has(#thumb[hidden]) { display: none; }
+    img {
+      display: block;
+      width: auto;
+      max-width: 100%;
+      height: auto;
+      max-height: min(52vh, 460px);
+      border-radius: 16px;
+      background: #07080b;
+    }
+    .copy { padding: 1rem 0.35rem 0.2rem; }
+    h2 {
+      margin: 0.2rem 0 0;
+      font-family: Palatino, "Palatino Linotype", Georgia, "Liberation Serif", serif;
+      font-size: clamp(1.55rem, 3vw, 2.25rem);
+      font-weight: 560;
+      letter-spacing: -0.03em;
+      line-height: 1.12;
+    }
+    .ok { margin: 0; color: var(--ok); font-size: 0.88rem; }
+    .meta { margin: 0.4rem 0 0; color: var(--muted); }
+    .options {
+      display: grid;
+      gap: 0.55rem;
+      margin: 1rem 0 0;
+    }
     .option {
       position: relative;
-      display: flex;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
       align-items: center;
-      gap: 0.8rem;
+      gap: 0.75rem;
       width: 100%;
-      margin: 0 0 0.5rem;
-      padding: 0.78rem 0.85rem;
+      min-height: 3.5rem;
+      padding: 0.8rem 0.9rem 0.95rem;
       overflow: hidden;
       border: 1px solid var(--line);
-      border-radius: 10px;
-      background: #fff;
+      border-radius: 14px;
+      background: var(--panel);
       color: var(--ink);
       text-align: left;
       cursor: pointer;
     }
-    .option .bar {
-      position: absolute;
-      inset: 0 auto 0 0;
-      width: 0;
-      background: rgba(12, 122, 69, 0.16);
+    .option:hover:not(:disabled) { border-color: rgba(231, 161, 90, 0.75); }
+    .option.ready { border-color: var(--copper); background: #241c15; }
+    .mark {
+      padding: 0.16rem 0.42rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
     }
-    .option .name, .option .size { position: relative; }
-    .option .size { color: var(--muted); font-size: 0.92rem; white-space: nowrap; }
-    .option.ready { border-color: var(--green); }
-    .hint { margin: 0.35rem 0 0; font-size: 0.92rem; }
-    #status { min-height: 1.3rem; margin: 0.7rem 0 0; }
-    #save { margin-top: 0.8rem; }
-    #detail { margin: 0.45rem 0 0; color: var(--muted); }
-    .error { color: var(--danger); }
-    footer { margin: 1.1rem 0 0; font-size: 0.9rem; }
+    .option[data-kind="audio"] .mark { color: var(--copper); }
+    .name { position: relative; min-width: 0; }
+    .size { position: relative; color: var(--muted); font-size: 0.92rem; white-space: nowrap; }
+    .bar {
+      position: absolute;
+      bottom: 0.38rem;
+      left: 0.7rem;
+      height: 3px;
+      width: 0;
+      max-width: calc(100% - 1.4rem);
+      border-radius: 99px;
+      background: var(--copper);
+    }
+    .hint { margin: 0.85rem 0.2rem 0; color: var(--muted); font-size: 0.92rem; }
+    #save {
+      margin-top: 1rem;
+      padding: 0.9rem;
+      border: 1px solid rgba(231, 161, 90, 0.4);
+      border-radius: 16px;
+      background: rgba(231, 161, 90, 0.08);
+    }
+    a.button {
+      display: block;
+      width: 100%;
+      padding: 0.95rem 1rem;
+      background: var(--ink);
+      color: #16130f;
+      font-weight: 700;
+    }
+    a.button:hover { background: #fff; }
+    #detail { margin: 0.55rem 0 0; color: var(--muted); }
+    footer { margin: 1.4rem 0 0; color: var(--muted); font-size: 0.88rem; }
+    @keyframes pulse {
+      70% { box-shadow: 0 0 0 8px rgba(231, 161, 90, 0); }
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: none; }
+    }
+    @media (min-width: 880px) {
+      .row { grid-template-columns: 1fr auto; align-items: center; }
+      #submit { width: auto; white-space: nowrap; }
+      .options { grid-template-columns: 1fr 1fr; }
+    }
     @media (max-width: 640px) {
-      main { width: 100%; margin: 0; border-width: 0 0 1px; border-radius: 0; min-height: 100vh; }
-      .head { grid-template-columns: 1fr; }
+      main { width: 100%; padding: 1.3rem 1rem 2rem; }
+      h1 { font-size: 2.35rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .dot, #card { animation: none; }
     }
   </style>
 </head>
 <body>
   <main>
+    <p class="kicker"><span class="dot" aria-hidden="true"></span>На этом компьютере</p>
     <h1>Скачать видео с YouTube и Rutube</h1>
     <p class="lead">Вставьте ссылку на ролик YouTube или Rutube. Появятся название, автор и качества, которые есть у этого видео: MP4 до 1080p и MP3.</p>
     <form id="form">
       <label for="url">Ссылка</label>
-      <input id="url" name="url" type="url" inputmode="url" placeholder="https://rutube.ru/video/…" required autocomplete="off">
-      <p class="examples">youtube.com/watch?v=… · youtu.be/… · youtube.com/shorts/… · rutube.ru/video/…</p>
-      <button id="submit" type="submit">Найти варианты для скачивания</button>
+      <div class="row">
+        <input id="url" name="url" type="url" inputmode="url" placeholder="https://rutube.ru/video/…" required autocomplete="off">
+        <button id="submit" type="submit">Найти варианты для скачивания</button>
+      </div>
+      <p class="examples">
+        <span>youtube.com/watch?v=…</span>
+        <span>youtu.be/…</span>
+        <span>youtube.com/shorts/…</span>
+        <span>rutube.ru/video/…</span>
+      </p>
     </form>
     <p id="status" role="status" aria-live="polite"></p>
     <section id="card" hidden>
-      <div class="head">
-        <img id="thumb" alt="" hidden>
-        <div>
-          <h2 id="title"></h2>
-          <p id="meta" class="meta"></p>
-          <p class="ok">Ссылка распознана</p>
-        </div>
+      <div class="stage">
+        <img id="thumb" alt="">
+      </div>
+      <div class="copy">
+        <p class="ok">Ссылка распознана</p>
+        <h2 id="title"></h2>
+        <p id="meta" class="meta"></p>
       </div>
       <div id="options" class="options"></div>
       <p class="hint">1080p — для большого экрана, 720p — для телефона. Если выбранное качество не скачалось, попробуйте качество пониже. Для музыки и лекций — MP3.</p>
@@ -177,6 +303,7 @@
 
     const preset = new URLSearchParams(location.search).get("url");
     if (preset) input.value = preset;
+    input.focus();
 
     function showError(message) {
       status.classList.add("error");
@@ -229,9 +356,7 @@
         thumb.removeAttribute("src");
         thumb.hidden = true;
       }
-      for (const option of payload.options || []) {
-        options.append(optionButton(option));
-      }
+      for (const option of payload.options || []) options.append(optionButton(option));
       card.hidden = false;
       status.textContent = "";
       submit.disabled = false;
@@ -243,6 +368,10 @@
       const button = document.createElement("button");
       button.type = "button";
       button.className = "option";
+      button.dataset.kind = option.kind === "audio" ? "audio" : "video";
+      const mark = document.createElement("span");
+      mark.className = "mark";
+      mark.textContent = option.kind === "audio" ? "MP3" : "MP4";
       const name = document.createElement("span");
       name.className = "name";
       name.textContent = option.label || option.id;
@@ -251,7 +380,7 @@
       size.textContent = option.sizeLabel || "";
       const bar = document.createElement("span");
       bar.className = "bar";
-      button.append(name, size, bar);
+      button.append(mark, name, size, bar);
       button.addEventListener("click", () => startDownload(option, button, name, size, bar));
       return button;
     }
@@ -284,9 +413,8 @@
       source.onmessage = (message) => {
         const data = JSON.parse(message.data);
         status.textContent = data.message || "";
-        if (data.percent === null || data.percent === undefined) {
-          bar.style.width = "35%";
-        } else {
+        if (data.percent === null || data.percent === undefined) bar.style.width = "35%";
+        else {
           bar.style.width = Math.max(0, Math.min(100, data.percent)) + "%";
           size.textContent = data.percent + "%";
         }
@@ -304,6 +432,7 @@
           save.hidden = false;
           status.textContent = "Файл готов";
           for (const item of options.querySelectorAll("button")) item.disabled = false;
+          save.scrollIntoView({ block: "nearest" });
         } else if (data.status === "error") {
           source.close();
           name.textContent = option.label || option.id;
