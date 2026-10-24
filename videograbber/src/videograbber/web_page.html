@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Скачать видео с YouTube</title>
+  <title>Скачать видео с YouTube и Rutube</title>
   <style>
     :root {
       color-scheme: light;
@@ -132,12 +132,12 @@
 </head>
 <body>
   <main>
-    <h1>Скачать видео с YouTube</h1>
-    <p class="lead">Вставьте ссылку на ролик. Появятся название, автор и качества, которые есть у этого видео: MP4 до 1080p и MP3.</p>
+    <h1>Скачать видео с YouTube и Rutube</h1>
+    <p class="lead">Вставьте ссылку на ролик YouTube или Rutube. Появятся название, автор и качества, которые есть у этого видео: MP4 до 1080p и MP3.</p>
     <form id="form">
       <label for="url">Ссылка</label>
-      <input id="url" name="url" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?v=…" required autocomplete="off">
-      <p class="examples">youtube.com/watch?v=… · youtu.be/… · youtube.com/shorts/…</p>
+      <input id="url" name="url" type="url" inputmode="url" placeholder="https://rutube.ru/video/…" required autocomplete="off">
+      <p class="examples">youtube.com/watch?v=… · youtu.be/… · youtube.com/shorts/… · rutube.ru/video/…</p>
       <button id="submit" type="submit">Найти варианты для скачивания</button>
     </form>
     <p id="status" role="status" aria-live="polite"></p>
@@ -151,7 +151,7 @@
         </div>
       </div>
       <div id="options" class="options"></div>
-      <p class="hint">1080p — для большого экрана, 720p — для телефона. 360p чаще всего лежит одним файлом, поэтому он самый надёжный. Для музыки и лекций — MP3.</p>
+      <p class="hint">1080p — для большого экрана, 720p — для телефона. Если выбранное качество не скачалось, попробуйте качество пониже. Для музыки и лекций — MP3.</p>
       <div id="save" hidden>
         <a id="download" class="button" href="#">Сохранить файл</a>
         <p id="detail"></p>

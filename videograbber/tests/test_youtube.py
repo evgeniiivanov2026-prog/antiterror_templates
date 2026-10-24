@@ -3,6 +3,8 @@ import pytest
 from videograbber.errors import DownloadError, UserError
 from videograbber.youtube import (
     build_options,
+    fetch_remote_thumbnail,
+    normalize_watch_url,
     normalize_youtube_url,
     preview_from_info,
 )
@@ -24,6 +26,41 @@ def test_normalize_accepts_watch_short_and_short_links():
     assert normalize_youtube_url("вот ролик: https://www.youtube.com/embed/abcdefghijk.") == (
         "https://www.youtube.com/watch?v=abcdefghijk"
     )
+
+
+_RUTUBE = "3eac3b4561676c17df9132a9a1e62e3e"
+
+
+def test_rutube_links_become_one_video_url():
+    assert normalize_watch_url(f" https://www.rutube.ru/video/{_RUTUBE}/?pl_id=4252 ") == (
+        f"https://rutube.ru/video/{_RUTUBE}/"
+    )
+    assert normalize_watch_url(f"https://rutube.ru/shorts/{_RUTUBE}/") == (
+        f"https://rutube.ru/video/{_RUTUBE}/"
+    )
+    assert normalize_watch_url(f"https://rutube.ru/play/embed/{_RUTUBE}") == (
+        f"https://rutube.ru/video/{_RUTUBE}/"
+    )
+    assert normalize_watch_url(
+        "https://rutube.ru/video/private/884fb55f07a97ab673c7d654553e0f48/?p=x2QojCumHTS3rsKHWXN8Lg"
+    ) == "https://rutube.ru/video/private/884fb55f07a97ab673c7d654553e0f48/?p=x2QojCumHTS3rsKHWXN8Lg"
+    assert normalize_watch_url("https://m.rutube.ru/play/embed/6722881?p=IbAigKqWd1do4mjaM5XLIQ") == (
+        "https://rutube.ru/play/embed/6722881?p=IbAigKqWd1do4mjaM5XLIQ"
+    )
+    assert normalize_watch_url("https://youtu.be/abcdefghijk") == (
+        "https://www.youtube.com/watch?v=abcdefghijk"
+    )
+
+
+def test_rutube_channel_and_other_sites_are_rejected():
+    with pytest.raises(UserError, match="роли"):
+        normalize_watch_url("https://rutube.ru/channel/639184/videos/")
+    with pytest.raises(UserError, match="роли"):
+        normalize_watch_url("https://rutube.ru/plst/308547/")
+    with pytest.raises(UserError, match="YouTube или Rutube"):
+        normalize_watch_url("https://videos.example/watch?v=abcdefghijk")
+    assert fetch_remote_thumbnail("https://example.com/thumb.jpg") is None
+    assert fetch_remote_thumbnail("https://pic.rutubelist.ru.evil.test/video/a.jpg") is None
 
 
 def test_normalize_rejects_playlist_channel_and_other_sites():

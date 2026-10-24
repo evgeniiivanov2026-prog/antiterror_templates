@@ -1,11 +1,11 @@
-"""Ссылка на ролик YouTube и список качеств, которые у него реально есть."""
+"""Ссылка на ролик YouTube или Rutube и список качеств, которые у него реально есть."""
 
 from __future__ import annotations
 
 import base64
 import re
 from urllib.parse import parse_qsl, unquote, urlsplit
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 
 from videograbber.errors import DependencyError, DownloadError, UserError
 from videograbber.grab import validate_url
@@ -23,6 +23,17 @@ _HOSTS = {
     "www.youtu.be",
     "youtube-nocookie.com",
     "www.youtube-nocookie.com",
+}
+_RUTUBE_HOSTS = {"rutube.ru", "www.rutube.ru", "m.rutube.ru"}
+_RUTUBE_ID = re.compile(r"^[0-9a-f]{32}$")
+_RUTUBE_NUMERIC = re.compile(r"^[0-9]{1,12}$")
+_RUTUBE_TOKEN = re.compile(r"^[A-Za-z0-9_-]{1,128}$")
+_THUMB_HOSTS = {
+    "i.ytimg.com",
+    "pic.rutubelist.ru",
+    "pic.rutube.ru",
+    "pic.rtbcdn.ru",
+    "static.rutube.ru",
 }
 _LADDER = (1080, 720, 480, 360, 240, 144)
 _LABELS = {
@@ -54,6 +65,18 @@ def normalize_youtube_url(url: str) -> str:
             "вставьте ссылку на само видео."
         )
     return f"https://www.youtube.com/watch?v={video_id}"
+
+
+def normalize_watch_url(url: str) -> str:
+    """Привести ссылку YouTube или Rutube к одному ролику."""
+
+    cleaned = validate_url(_extract_url(url))
+    host = (urlsplit(cleaned).hostname or "").lower()
+    if host in _HOSTS:
+        return normalize_youtube_url(cleaned)
+    if host in _RUTUBE_HOSTS:
+        return _normalize_rutube(urlsplit(cleaned))
+    raise UserError("Нужна ссылка на YouTube или Rutube: ролик, Shorts или youtu.be.")
 
 
 def preview_from_info(info: dict, thumbnail: str | None = None, url: str | None = None) -> dict:
@@ -120,6 +143,21 @@ def build_options(info: dict) -> list[dict]:
     return options
 
 
+def lookup_watch(url: str, cookiefile=None) -> dict:
+    """Карточка ролика YouTube или Rutube: название, автор, превью и кнопки."""
+
+    normalized = normalize_watch_url(url)
+    info = dict(extract_youtube_info(normalized, cookiefile))
+    host = (urlsplit(normalized).hostname or "").lower()
+    if host in _RUTUBE_HOSTS:
+        thumbnail = fetch_remote_thumbnail(str(info.get("thumbnail") or ""))
+    else:
+        video_id = str(info.get("id") or normalized.rsplit("=", 1)[-1])
+        info["id"] = video_id
+        thumbnail = fetch_thumbnail(video_id)
+    return preview_from_info(info, thumbnail, url=normalized)
+
+
 def lookup_youtube(url: str, cookiefile=None) -> dict:
     """Название, автор, превью и кнопки скачивания для одной ссылки."""
 
@@ -161,6 +199,32 @@ def extract_youtube_info(url: str, cookiefile=None) -> dict:
     return _single_video(info)
 
 
+class _ThumbRedirect(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        host = (urlsplit(newurl).hostname or "").lower()
+        if host not in _THUMB_HOSTS:
+            return None
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def fetch_remote_thumbnail(url: str) -> str | None:
+    """Скачать превью только с известных хостов картинок YouTube и Rutube."""
+
+    parsed = urlsplit(url.strip())
+    host = (parsed.hostname or "").lower()
+    if parsed.scheme not in {"http", "https"} or host not in _THUMB_HOSTS:
+        return None
+    request = Request(url, headers={"User-Agent": "videograbber"})
+    try:
+        with build_opener(_ThumbRedirect).open(request, timeout=8) as response:
+            payload = response.read(160_001)
+    except (OSError, ValueError):
+        return None
+    if len(payload) > 160_000:
+        return None
+    return _data_url(payload)
+
+
 def fetch_thumbnail(video_id: str) -> str | None:
     if not _ID.fullmatch(video_id):
         return None
@@ -184,6 +248,56 @@ def _extract_url(value: str) -> str:
     if match is None:
         return text
     return match.group(0).rstrip(").,]>\"'")
+
+
+def _normalize_rutube(parsed) -> str:
+    parts = [part for part in unquote(parsed.path).strip("/").split("/") if part]
+    token = _access_token(parsed.query)
+    kind = "public"
+    raw = None
+    if len(parts) >= 3 and parts[0] == "video" and parts[1] == "private":
+        raw = parts[2]
+        kind = "private"
+    elif len(parts) >= 3 and parts[0] == "video" and parts[1] == "embed":
+        raw = parts[2]
+        kind = "numeric"
+    elif len(parts) >= 2 and parts[0] == "video" and parts[1] not in {"person", "embed", "private"}:
+        raw = parts[1]
+    elif len(parts) >= 2 and parts[0] == "shorts":
+        raw = parts[1]
+    elif len(parts) >= 2 and parts[0] == "embed":
+        raw = parts[1]
+    elif len(parts) >= 3 and parts[0] == "play" and parts[1] == "embed":
+        raw = parts[2]
+    elif len(parts) >= 4 and parts[0] == "live" and parts[1] == "video" and parts[2] == "private":
+        raw = parts[3]
+        kind = "private"
+    elif len(parts) >= 3 and parts[0] == "live" and parts[1] == "video" and parts[2] != "private":
+        raw = parts[2]
+    if raw and _RUTUBE_ID.fullmatch(raw.lower()):
+        video_id = raw.lower()
+        path = "video/private" if kind == "private" else "video"
+        normalized = f"https://rutube.ru/{path}/{video_id}/"
+        if token:
+            normalized += f"?p={token}"
+        return normalized
+    numeric = kind == "numeric" or (parts[:1] == ["embed"]) or (parts[:2] == ["play", "embed"])
+    if raw and numeric and _RUTUBE_NUMERIC.fullmatch(raw):
+        normalized = f"https://rutube.ru/play/embed/{raw}"
+        if token:
+            normalized += f"?p={token}"
+        return normalized
+    raise UserError(
+        "В ссылке не нашлось ролика. Плейлист и канал целиком не скачиваются — "
+        "вставьте ссылку на само видео."
+    )
+
+
+def _access_token(query: str) -> str:
+    value = _query_value(query, "p")
+    if value and _RUTUBE_TOKEN.fullmatch(value):
+        return value
+    return ""
 
 
 def _video_id(host: str, parsed) -> str | None:

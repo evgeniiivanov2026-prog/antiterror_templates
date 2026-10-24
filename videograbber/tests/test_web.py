@@ -66,7 +66,8 @@ def test_page_is_one_document_without_remote_assets(tmp_path):
     page = body.decode()
     assert status == 200
     assert "text/html" in headers["Content-Type"]
-    assert "Скачать видео с YouTube" in page
+    assert "Скачать видео с YouTube и Rutube" in page
+    assert "rutube.ru/video" in page
     assert "Найти варианты для скачивания" in page
     assert "MP3" in page
     assert "src=\"http" not in page
@@ -275,6 +276,47 @@ def test_lookup_lists_formats_and_audio_job_returns_mp3(tmp_path):
     assert file_status == 200
     assert file_body == b"mp3-bytes"
     assert "audio/mpeg" in file_headers["Content-Type"]
+
+
+def test_rutube_link_is_downloaded_as_one_video(tmp_path):
+    seen = {}
+
+    def grabber(url, output=None, quality="best", on_progress=None, **kwargs):
+        seen["url"] = url
+        seen["quality"] = quality
+        return _result(Path(output) / "Ролик.mp4")
+
+    server = _start(grabber, tmp_path)
+    port = server.server_address[1]
+    try:
+        status, body, _headers = _request(
+            port,
+            "/api/jobs",
+            method="POST",
+            body={
+                "url": "https://www.rutube.ru/video/3eac3b4561676c17df9132a9a1e62e3e/?pl_id=4252",
+                "quality": "720",
+            },
+        )
+        job_id = json.loads(body)["id"]
+        deadline = 0
+        snapshot = {}
+        while deadline < 20:
+            _code, payload, _headers = _request(port, f"/api/jobs/{job_id}")
+            snapshot = json.loads(payload)
+            if snapshot["status"] == "done":
+                break
+            deadline += 1
+        else:
+            raise AssertionError(snapshot)
+    finally:
+        server.shutdown()
+    assert status == 202
+    assert seen == {
+        "url": "https://rutube.ru/video/3eac3b4561676c17df9132a9a1e62e3e/",
+        "quality": "720",
+    }
+    assert snapshot["filename"] == "Ролик.mp4"
 
 
 def test_web_help_lists_the_port(capsys):

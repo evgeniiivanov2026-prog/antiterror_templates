@@ -1,7 +1,7 @@
 [project]
 name = "videograbber"
-version = "1.2.0"
-description = "Скачивает видео по ссылке в MP4. Веб-страница забирает ролик YouTube в MP4 или MP3."
+version = "1.3.0"
+description = "Скачивает видео по ссылке в MP4. Веб-страница забирает ролик YouTube или Rutube в MP4 или MP3."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

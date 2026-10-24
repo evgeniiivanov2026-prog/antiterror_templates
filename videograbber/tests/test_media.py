@@ -25,9 +25,9 @@ from videograbber.media import (
 
 def test_format_selector_prefers_compatible_streams_at_requested_height():
     selected = format_selector(720)
-    assert selected.startswith("bestvideo[height<=720][vcodec^=avc1]+bestaudio[acodec^=mp4a]/")
-    assert "bestvideo[width<=720][vcodec^=avc1]+bestaudio[acodec^=mp4a]/" in selected
-    assert selected.endswith("best[height<=720]/best[width<=720]/best")
+    assert selected.startswith("bestvideo[height<=736][vcodec^=avc1]+bestaudio[acodec^=mp4a]/")
+    assert "bestvideo[width<=736][vcodec^=avc1]+bestaudio[acodec^=mp4a]/" in selected
+    assert selected.endswith("best[height<=736]/best[width<=736]/best")
 
 
 def test_audio_format_selector_prefers_m4a():

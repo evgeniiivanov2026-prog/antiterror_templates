@@ -18,7 +18,7 @@ from urllib.parse import quote, unquote, urlsplit
 from videograbber.errors import UserError, VideograbberError
 from videograbber.grab import GrabResult, grab, grab_audio
 from videograbber.media import ProgressEvent, format_bytes, format_duration
-from videograbber.youtube import lookup_youtube, normalize_youtube_url
+from videograbber.youtube import lookup_watch, normalize_watch_url
 
 _WEB_QUALITIES = ("1080", "720", "480", "360", "240", "144", "audio")
 
@@ -99,7 +99,7 @@ class App:
         self._lock = threading.Lock()
 
     def lookup(self, url: str) -> dict:
-        cleaned = normalize_youtube_url(url)
+        cleaned = normalize_watch_url(url)
         payload = self.inspector(cleaned)
         if not isinstance(payload, dict) or not isinstance(payload.get("options"), list):
             raise VideograbberError("Не удалось прочитать ролик.")
@@ -108,7 +108,7 @@ class App:
         return body
 
     def create(self, url: str, quality: str) -> Job:
-        cleaned = normalize_youtube_url(url)
+        cleaned = normalize_watch_url(url)
         if quality not in _WEB_QUALITIES:
             allowed = ", ".join(_WEB_QUALITIES)
             raise UserError(f"Неизвестное качество {quality!r}. Доступно: {allowed}.")
@@ -362,7 +362,7 @@ def make_server(
         return grab_audio(url, output=output, on_progress=on_progress, cookies=cookies, **kwargs)
 
     def inspect(url):
-        return lookup_youtube(url, cookiefile=cookies)
+        return lookup_watch(url, cookiefile=cookies)
 
     app = App(
         grabber or video,
@@ -390,7 +390,7 @@ def serve(host: str = "127.0.0.1", port: int = 8765, cookies: Path | None = None
 def run_web(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="videograbber web",
-        description="Локальная страница: ссылка на ролик YouTube превращается в MP4 или MP3.",
+        description="Локальная страница: ссылка на ролик YouTube или Rutube превращается в MP4 или MP3.",
     )
     parser.add_argument("--host", default="127.0.0.1", help="Адрес, по умолчанию только этот компьютер")
     parser.add_argument("--port", type=int, default=8765, help="Порт, по умолчанию 8765")

@@ -93,8 +93,11 @@ def format_selector(max_height: int | None) -> str:
             "bestvideo[ext=mp4]+bestaudio[ext=m4a]/"
             "bestvideo+bestaudio/best/best"
         )
-    height = f"[height<={max_height}]"
-    portrait = f"[width<={max_height}]"
+    # У Rutube «360p» иногда чуть выше 360 по высоте кадра. Небольшой допуск
+    # оставляет эту дорожку в выбранном качестве и не заставляет перекодировать её.
+    limit = max_height + 16
+    height = f"[height<={limit}]"
+    portrait = f"[width<={limit}]"
     compatible = (
         f"bestvideo{height}[vcodec^=avc1]+bestaudio[acodec^=mp4a]/"
         f"bestvideo{height}[vcodec^=avc1]+bestaudio[acodec=aac]/"
@@ -123,7 +126,7 @@ def scale_filter(info: MediaInfo, max_edge: int | None) -> str | None:
 
     if not max_edge or not info.width or not info.height:
         return None
-    if min(info.width, info.height) <= max_edge:
+    if min(info.width, info.height) <= max_edge + 16:
         return None
     if info.width <= info.height:
         return f"scale={max_edge}:-2"
