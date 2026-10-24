@@ -6,7 +6,7 @@ import pytest
 
 from videograbber.download import Source
 from videograbber.errors import UserError
-from videograbber.grab import grab, validate_url
+from videograbber.grab import grab, grab_audio, validate_url
 
 
 def _payload(codec: str, audio: str | None, width: int = 160, height: int = 120) -> str:
@@ -157,6 +157,31 @@ def test_cookies_are_forwarded_to_the_downloader(tmp_path):
         runner=_runner("h264", "aac", []),
     )
     assert seen["cookiefile"] == cookie_file
+
+
+def test_grab_audio_writes_an_mp3(tmp_path):
+    def download(url, directory, on_progress, cookiefile=None):
+        assert url == "https://example.com/a"
+        path = directory / "audio.m4a"
+        path.write_bytes(b"aac")
+        return Source(path=path, title="Лекция/1", duration=3)
+
+    def runner(command):
+        assert "libmp3lame" in command
+        assert "-vn" in command
+        Path(command[-1]).write_bytes(b"id3")
+        return CompletedProcess(command, 0, stdout="", stderr="")
+
+    result = grab_audio(
+        "https://example.com/a",
+        output=tmp_path,
+        downloader=download,
+        runner=runner,
+    )
+    assert result.audio_only is True
+    assert result.path == (tmp_path / "Лекция 1.mp3").resolve()
+    assert result.path.read_bytes() == b"id3"
+    assert result.audio_codec == "mp3"
 
 
 def test_validate_url():

@@ -10,10 +10,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from videograbber.download import download_video
+from videograbber.download import download_audio, download_video
 from videograbber.errors import UserError
 from videograbber.media import (
     ProgressEvent,
+    assemble_mp3,
     assemble_mp4,
     moov_before_mdat,
     parse_quality,
@@ -35,6 +36,7 @@ class GrabResult:
     video_codec: str
     audio_codec: str | None
     remuxed: bool
+    audio_only: bool = False
 
 
 def grab(
@@ -48,6 +50,7 @@ def grab(
     on_progress=None,
     downloader=None,
     runner=None,
+    strict: bool = False,
 ) -> GrabResult:
     """Скачать url и записать один MP4, который открывается обычным плеером."""
 
@@ -59,6 +62,8 @@ def grab(
     fetch = downloader or download_video
     probe_runner = runner or default_runner
     download_kwargs = {} if cookies is None else {"cookiefile": cookies}
+    if strict and downloader is None:
+        download_kwargs["strict"] = True
     with tempfile.TemporaryDirectory(prefix="videograbber-") as temporary:
         source = fetch(cleaned, Path(temporary), max_height, on_progress, **download_kwargs)
         inspected = probe_media(source.path, probe_runner)
@@ -112,6 +117,66 @@ def grab(
         video_codec=packed.video_codec,
         audio_codec=audio,
         remuxed=remuxed,
+    )
+
+
+def grab_audio(
+    url: str,
+    output: Path | None = None,
+    *,
+    force: bool = False,
+    cookies: Path | None = None,
+    directory: Path | None = None,
+    on_progress=None,
+    downloader=None,
+    runner=None,
+) -> GrabResult:
+    """Скачать звук и записать один MP3."""
+
+    require_tools()
+    cleaned = validate_url(url)
+    if cookies is not None and not cookies.is_file():
+        raise UserError(f"Файл cookies не найден: {cookies}")
+    fetch = downloader or download_audio
+    download_kwargs = {} if cookies is None else {"cookiefile": cookies}
+    with tempfile.TemporaryDirectory(prefix="videograbber-") as temporary:
+        source = fetch(cleaned, Path(temporary), on_progress, **download_kwargs)
+        destination = resolve_output_path(
+            output,
+            source.title,
+            directory or Path.cwd(),
+            suffix=".mp3",
+        )
+        if destination.exists() and not force:
+            raise UserError(
+                f"Файл уже существует: {destination}. "
+                "Добавьте --force, чтобы перезаписать его."
+            )
+        if on_progress is not None:
+            on_progress(ProgressEvent("Собираю MP3"))
+        partial = assemble_mp3(
+            source.path,
+            destination,
+            source.duration,
+            on_progress,
+            runner=runner,
+        )
+        try:
+            os.replace(partial, destination)
+        except Exception:
+            partial.unlink(missing_ok=True)
+            raise
+    return GrabResult(
+        path=destination.resolve(),
+        title=source.title,
+        size=destination.stat().st_size,
+        duration=source.duration,
+        width=None,
+        height=None,
+        video_codec="",
+        audio_codec="mp3",
+        remuxed=False,
+        audio_only=True,
     )
 
 

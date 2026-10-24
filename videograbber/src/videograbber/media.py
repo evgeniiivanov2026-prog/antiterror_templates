@@ -32,6 +32,8 @@ _QUALITY_HEIGHTS = {
     "720": 720,
     "480": 480,
     "360": 360,
+    "240": 240,
+    "144": 144,
 }
 
 
@@ -101,17 +103,22 @@ def sanitize_filename(name: str) -> str:
     return cleaned
 
 
-def resolve_output_path(output: Path | None, title: str, cwd: Path) -> Path:
-    filename = f"{sanitize_filename(title)}.mp4"
+def resolve_output_path(
+    output: Path | None,
+    title: str,
+    cwd: Path,
+    suffix: str = ".mp4",
+) -> Path:
+    filename = f"{sanitize_filename(title)}{suffix}"
     if output is None:
         return cwd / filename
     if output.exists() and output.is_dir():
         return output / filename
-    if output.suffix.lower() == ".mp4":
+    if output.suffix.lower() == suffix:
         return output
     if output.suffix == "":
         return output / filename
-    raise UserError("Укажите файл с расширением .mp4 или папку для сохранения.")
+    raise UserError(f"Укажите файл с расширением {suffix} или папку для сохранения.")
 
 
 def format_bytes(size: float) -> str:
@@ -285,7 +292,65 @@ def parse_ffmpeg_time(value: str) -> float | None:
     return hours * 3600 + minutes * 60 + seconds
 
 
-def _run_ffmpeg(command: list[str], duration: float | None, on_progress) -> None:
+def build_mp3_command(source: Path, dest: Path) -> list[str]:
+    return [
+        "ffmpeg",
+        "-hide_banner",
+        "-nostdin",
+        "-nostats",
+        "-loglevel",
+        "error",
+        "-progress",
+        "pipe:1",
+        "-y",
+        "-i",
+        str(source),
+        "-vn",
+        "-map_metadata",
+        "0",
+        "-c:a",
+        "libmp3lame",
+        "-b:a",
+        AUDIO_BITRATE,
+        "-f",
+        "mp3",
+        str(dest),
+    ]
+
+
+def assemble_mp3(
+    source: Path,
+    dest: Path,
+    duration: float | None,
+    on_progress,
+    runner=None,
+) -> Path:
+    """Собрать временный MP3 рядом с назначением. Вызывающий сам ставит файл на место."""
+
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    partial = dest.with_suffix(".part.mp3")
+    command = build_mp3_command(source, partial)
+    try:
+        if runner is None:
+            _run_ffmpeg(command, duration, on_progress, label="Сборка MP3")
+        else:
+            result = runner(command)
+            if result.returncode != 0:
+                raise MediaError(_ffmpeg_error(result.stderr, kind="MP3"))
+        if not partial.exists() or partial.stat().st_size == 0:
+            raise MediaError("ffmpeg не создал MP3-файл.")
+    except BaseException:
+        partial.unlink(missing_ok=True)
+        raise
+    return partial
+
+
+def _run_ffmpeg(
+    command: list[str],
+    duration: float | None,
+    on_progress,
+    label: str = "Сборка MP4",
+) -> None:
     process = subprocess.Popen(
         command,
         stdout=subprocess.PIPE,
@@ -315,20 +380,21 @@ def _run_ffmpeg(command: list[str], duration: float | None, on_progress) -> None
             if percent == last_percent:
                 continue
             last_percent = percent
-            on_progress(ProgressEvent(f"Сборка MP4: {percent}%", transient=True, percent=percent))
+            on_progress(ProgressEvent(f"{label}: {percent}%", transient=True, percent=percent))
     code = process.wait()
     thread.join()
     if code != 0:
-        raise MediaError(_ffmpeg_error("".join(stderr_lines)))
+        kind = "MP3" if label.endswith("MP3") else "MP4"
+        raise MediaError(_ffmpeg_error("".join(stderr_lines), kind=kind))
     if on_progress is not None:
-        on_progress(ProgressEvent("Сборка MP4: 100%", transient=True, percent=100))
+        on_progress(ProgressEvent(f"{label}: 100%", transient=True, percent=100))
 
 
-def _ffmpeg_error(stderr: str | None) -> str:
+def _ffmpeg_error(stderr: str | None, kind: str = "MP4") -> str:
     lines = [line.strip() for line in (stderr or "").splitlines() if line.strip()]
     if not lines:
-        return "ffmpeg не смог собрать MP4."
-    return f"ffmpeg не смог собрать MP4: {' '.join(lines[-3:])}"
+        return f"ffmpeg не смог собрать {kind}."
+    return f"ffmpeg не смог собрать {kind}: {' '.join(lines[-3:])}"
 
 
 def moov_before_mdat(path: Path) -> bool:

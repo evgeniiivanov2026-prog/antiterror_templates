@@ -32,6 +32,12 @@ _MEDIA_SUFFIXES = {
     ".3gp",
     ".ogv",
     ".wmv",
+    ".m4a",
+    ".mp3",
+    ".opus",
+    ".ogg",
+    ".aac",
+    ".wav",
 }
 
 
@@ -115,10 +121,23 @@ def build_ydl_options(
     on_progress,
     cookiefile: Path | None = None,
 ) -> dict:
+    options = _common_options(directory / "media.%(ext)s", on_progress, cookiefile)
+    options["format"] = format_selector(max_height)
+    options["merge_output_format"] = "mkv"
+    options["format_sort"] = ["res", "fps", "codec:h264", "acodec:aac", "br"]
+    return options
+
+
+def build_audio_options(directory: Path, on_progress, cookiefile: Path | None = None) -> dict:
+    options = _common_options(directory / "audio.%(ext)s", on_progress, cookiefile)
+    options["format"] = "bestaudio[ext=m4a]/bestaudio[acodec^=mp4a]/bestaudio/best"
+    options["format_sort"] = ["acodec:aac", "br"]
+    return options
+
+
+def _common_options(outtmpl: Path, on_progress, cookiefile: Path | None) -> dict:
     options = {
-        "format": format_selector(max_height),
-        "outtmpl": str(directory / "media.%(ext)s"),
-        "merge_output_format": "mkv",
+        "outtmpl": str(outtmpl),
         "noplaylist": True,
         "quiet": True,
         "no_warnings": True,
@@ -129,7 +148,6 @@ def build_ydl_options(
         "socket_timeout": 30,
         "buffersize": BUFFER_SIZE,
         "concurrent_fragment_downloads": PARALLEL_CONNECTIONS,
-        "format_sort": ["res", "fps", "codec:h264", "acodec:aac", "br"],
         "progress_hooks": [DownloadProgress(on_progress)],
         "match_filter": reject_unsupported,
         "logger": _SilentLogger(),
@@ -138,6 +156,24 @@ def build_ydl_options(
     if cookiefile is not None:
         options["cookiefile"] = str(cookiefile)
     return options
+
+
+class _StrictFormat:
+    """Выбирает дорожку не выше заданной короткой стороны, в том числе у вертикального видео."""
+
+    def __init__(self, max_edge: int) -> None:
+        self.max_edge = max_edge
+        self.ydl = None
+
+    def __call__(self, ctx):
+        from videograbber.youtube import format_spec_for_edge
+
+        if self.ydl is None:
+            return iter(())
+        spec = format_spec_for_edge(list(ctx.get("formats") or []), self.max_edge)
+        if not spec:
+            return iter(())
+        return self.ydl.build_format_selector(spec)(ctx)
 
 
 def _can_accelerate(info: dict) -> bool:
@@ -211,7 +247,28 @@ def download_video(
     max_height: int | None,
     on_progress,
     cookiefile: Path | None = None,
+    *,
+    strict: bool = False,
 ) -> Source:
+    options = build_ydl_options(directory, max_height, on_progress, cookiefile)
+    selector = None
+    if strict and max_height is not None:
+        selector = _StrictFormat(max_height)
+        options["format"] = selector
+    return _run_download(url, directory, options, selector)
+
+
+def download_audio(
+    url: str,
+    directory: Path,
+    on_progress,
+    cookiefile: Path | None = None,
+) -> Source:
+    options = build_audio_options(directory, on_progress, cookiefile)
+    return _run_download(url, directory, options, None)
+
+
+def _run_download(url: str, directory: Path, options: dict, selector: _StrictFormat | None) -> Source:
     try:
         import yt_dlp
         from yt_dlp.utils import DownloadError as YtDlpDownloadError
@@ -220,9 +277,10 @@ def download_video(
             "Не установлен yt-dlp. Выполните: pip install videograbber"
         ) from exc
 
-    options = build_ydl_options(directory, max_height, on_progress, cookiefile)
     try:
         with _open_fast(yt_dlp.YoutubeDL, options) as ydl:
+            if selector is not None:
+                selector.ydl = ydl
             info = ydl.extract_info(url, download=True)
     except YtDlpDownloadError as exc:
         raise DownloadError(_clean_message(str(exc))) from exc
@@ -289,6 +347,8 @@ def _clean_message(message: str) -> str:
     if not line:
         return "Не удалось скачать видео."
     lowered = line.lower()
+    if "requested format is not available" in lowered:
+        return "В этом качестве ролик не скачивается. Выберите вариант ниже."
     if "cookie" in lowered or "sign in" in lowered or "logged-in" in lowered:
         line += " Если сайт пускает вас в браузере, повторите команду с --cookies."
     return line

@@ -8,6 +8,7 @@ from videograbber.media import (
     MediaInfo,
     assemble_mp4,
     build_ffmpeg_command,
+    build_mp3_command,
     format_bytes,
     format_duration,
     format_selector,
@@ -31,6 +32,13 @@ def test_format_selector_without_limit_still_has_fallback():
     assert format_selector(None).endswith("bestvideo+bestaudio/best/best")
 
 
+def test_mp3_command_drops_the_picture_and_uses_lame(tmp_path):
+    command = build_mp3_command(tmp_path / "in.m4a", tmp_path / "out.mp3")
+    assert command[command.index("-vn") + 1] == "-map_metadata"
+    assert command[command.index("-c:a") + 1] == "libmp3lame"
+    assert command[-1].endswith("out.mp3")
+
+
 def _box(kind: bytes, payload: bytes = b"") -> bytes:
     return (8 + len(payload)).to_bytes(4, "big") + kind + payload
 
@@ -48,6 +56,7 @@ def test_moov_before_mdat_reads_only_the_header_order(tmp_path):
 def test_parse_quality():
     assert parse_quality("best") is None
     assert parse_quality("1080") == 1080
+    assert parse_quality("144") == 144
     with pytest.raises(UserError):
         parse_quality("999")
 

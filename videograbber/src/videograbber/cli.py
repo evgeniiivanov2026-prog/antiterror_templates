@@ -11,7 +11,7 @@ from videograbber.errors import DependencyError, DownloadError, MediaError, User
 from videograbber.grab import GrabResult, grab
 from videograbber.media import ProgressEvent, format_bytes, format_duration
 
-_QUALITIES = ("best", "2160", "1440", "1080", "720", "480", "360")
+_QUALITIES = ("best", "2160", "1440", "1080", "720", "480", "360", "240", "144")
 
 
 class Reporter:
