@@ -9,7 +9,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from videograbber.errors import DependencyError, DownloadError
-from videograbber.media import ProgressEvent, format_bytes, format_selector
+from videograbber.media import (
+    ProgressEvent,
+    audio_format_selector,
+    format_bytes,
+    format_selector,
+)
 from videograbber.parallel import (
     BUFFER_SIZE,
     PARALLEL_CONNECTIONS,
@@ -32,6 +37,18 @@ _MEDIA_SUFFIXES = {
     ".3gp",
     ".ogv",
     ".wmv",
+}
+_AUDIO_SUFFIXES = {
+    ".m4a",
+    ".mp3",
+    ".opus",
+    ".ogg",
+    ".aac",
+    ".flac",
+    ".wav",
+    ".webm",
+    ".mp4",
+    ".mkv",
 }
 
 
@@ -211,6 +228,8 @@ def download_video(
     max_height: int | None,
     on_progress,
     cookiefile: Path | None = None,
+    selector: str | None = None,
+    suffixes: set[str] | None = None,
 ) -> Source:
     try:
         import yt_dlp
@@ -221,6 +240,8 @@ def download_video(
         ) from exc
 
     options = build_ydl_options(directory, max_height, on_progress, cookiefile)
+    if selector:
+        options["format"] = selector
     try:
         with _open_fast(yt_dlp.YoutubeDL, options) as ydl:
             info = ydl.extract_info(url, download=True)
@@ -232,9 +253,26 @@ def download_video(
     if selected.get("is_live"):
         raise DownloadError("Прямой эфир нельзя сохранить как один конечный MP4.")
     return Source(
-        path=_locate_download(directory, selected),
+        path=_locate_download(directory, selected, suffixes),
         title=str(selected.get("title") or selected.get("id") or "video"),
         duration=_duration(selected.get("duration")),
+    )
+
+
+def download_audio(
+    url: str,
+    directory: Path,
+    on_progress,
+    cookiefile: Path | None = None,
+) -> Source:
+    return download_video(
+        url,
+        directory,
+        None,
+        on_progress,
+        cookiefile,
+        selector=audio_format_selector(),
+        suffixes=_AUDIO_SUFFIXES,
     )
 
 
@@ -251,7 +289,8 @@ def _single_video(info: dict) -> dict:
     )
 
 
-def _locate_download(directory: Path, info: dict) -> Path:
+def _locate_download(directory: Path, info: dict, suffixes: set[str] | None = None) -> Path:
+    allowed = suffixes or _MEDIA_SUFFIXES
     candidates: list[Path] = []
     for item in info.get("requested_downloads") or []:
         for key in ("filepath", "filename"):
@@ -261,23 +300,26 @@ def _locate_download(directory: Path, info: dict) -> Path:
         if info.get(key):
             candidates.append(Path(info[key]))
     for path in candidates:
-        existing = _existing_media(path)
+        existing = _existing_media(path, allowed)
         if existing is not None:
             return existing
     files = [
         path
         for path in directory.iterdir()
-        if path.is_file() and path.suffix.lower() in _MEDIA_SUFFIXES and path.stat().st_size > 0
+        if path.is_file() and path.suffix.lower() in allowed and path.stat().st_size > 0
     ]
     if not files:
         raise DownloadError("Видео скачано, но готовый файл не найден.")
     return max(files, key=lambda path: path.stat().st_size)
 
 
-def _existing_media(path: Path) -> Path | None:
-    options = [path, *(path.with_suffix(ext) for ext in (".mkv", ".mp4", ".webm", ".mov"))]
+def _existing_media(path: Path, allowed: set[str]) -> Path | None:
+    options = [
+        path,
+        *(path.with_suffix(ext) for ext in (".mkv", ".mp4", ".webm", ".m4a", ".mp3", ".opus", ".ogg")),
+    ]
     for option in options:
-        if option.is_file() and option.stat().st_size > 0 and option.suffix.lower() in _MEDIA_SUFFIXES:
+        if option.is_file() and option.stat().st_size > 0 and option.suffix.lower() in allowed:
             return option
     return None
 
@@ -289,6 +331,12 @@ def _clean_message(message: str) -> str:
     if not line:
         return "Не удалось скачать видео."
     lowered = line.lower()
+    if "not a bot" in lowered or "sign in to confirm" in lowered:
+        return (
+            "YouTube просит подтвердить, что запрос не от бота. "
+            "Если ролик открывается в браузере, экспортируйте cookies в файл Netscape "
+            "и запустите: videograbber web --cookies cookies.txt"
+        )
     if "cookie" in lowered or "sign in" in lowered or "logged-in" in lowered:
         line += " Если сайт пускает вас в браузере, повторите команду с --cookies."
     return line

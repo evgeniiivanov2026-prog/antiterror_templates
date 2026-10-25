@@ -3,227 +3,451 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>videograbber</title>
+  <title>Скачать видео с YouTube и Rutube</title>
   <style>
     :root {
-      color-scheme: light;
-      --ink: #1c1915;
-      --muted: #5e584f;
-      --paper: #f3efe6;
-      --card: #fffdf8;
-      --line: #1c1915;
-      --green: #0f6e56;
-      --amber: #e39b2b;
-      --danger: #9d2c2c;
+      color-scheme: dark;
+      --bg: #0c0e12;
+      --ink: #f6f3ec;
+      --muted: #b7b1a6;
+      --line: rgba(246, 243, 236, 0.12);
+      --field: #12151b;
+      --panel: #171b22;
+      --copper: #e7a15a;
+      --copper-ink: #1b130c;
+      --danger: #ffb4a8;
+      --ok: #b7e3c4;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       min-height: 100vh;
-      background: var(--paper);
       color: var(--ink);
-      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      background:
+        radial-gradient(980px 520px at 8% -12%, rgba(231, 161, 90, 0.2), transparent 58%),
+        radial-gradient(820px 480px at 100% 110%, rgba(118, 156, 186, 0.16), transparent 52%),
+        var(--bg);
+      font-family: "Segoe UI", "Helvetica Neue", system-ui, sans-serif;
       font-size: 16px;
       line-height: 1.45;
     }
     main {
-      width: min(40rem, calc(100% - 2rem));
-      margin: 2.5rem auto;
-      padding: 1.5rem;
-      background: var(--card);
-      border: 1px solid var(--line);
+      width: min(68rem, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 2.4rem 0 3.2rem;
+    }
+    body:has(#card[hidden]) main {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .kicker {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0 0 0.85rem;
+      color: var(--muted);
+      font-size: 0.78rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    .dot {
+      width: 0.48rem;
+      height: 0.48rem;
+      border-radius: 50%;
+      background: var(--copper);
+      box-shadow: 0 0 0 0 rgba(231, 161, 90, 0.55);
+      animation: pulse 2.6s ease-out infinite;
     }
     h1 {
       margin: 0;
-      font-size: 1.75rem;
-      letter-spacing: -0.03em;
+      max-width: 16ch;
+      font-family: Palatino, "Palatino Linotype", "Iowan Old Style", Georgia, "Liberation Serif", serif;
+      font-size: clamp(2.5rem, 6vw, 4.6rem);
+      font-weight: 560;
+      letter-spacing: -0.035em;
+      line-height: 0.96;
     }
-    .lead { margin: 0.4rem 0 1.25rem; color: var(--muted); }
-    label { display: block; font-weight: 650; margin-bottom: 0.35rem; }
-    input, select, button, a.button {
+    .lead {
+      max-width: 38rem;
+      margin: 1rem 0 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+    form { margin-top: 1.8rem; }
+    label {
+      display: block;
+      margin-bottom: 0.45rem;
+      font-size: 0.92rem;
+      font-weight: 650;
+    }
+    .row { display: grid; gap: 0.65rem; }
+    input, button, a.button { font: inherit; }
+    input {
       width: 100%;
-      font: inherit;
-    }
-    input, select {
-      padding: 0.7rem 0.75rem;
+      padding: 0.95rem 1rem;
       border: 1px solid var(--line);
-      background: #fff;
-      border-radius: 0;
+      border-radius: 14px;
+      background: var(--field);
+      color: var(--ink);
     }
-    .field { margin-bottom: 0.9rem; }
-    button, a.button {
-      display: inline-block;
-      margin-top: 0.3rem;
-      padding: 0.75rem 1rem;
+    input::placeholder { color: #8f897f; }
+    .examples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin: 0.7rem 0 0;
+    }
+    .examples span {
+      padding: 0.22rem 0.55rem;
       border: 1px solid var(--line);
-      background: var(--green);
-      color: #fff;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    #submit, a.button {
+      border: 0;
+      border-radius: 14px;
+      cursor: pointer;
       text-align: center;
       text-decoration: none;
+    }
+    #submit {
+      width: 100%;
+      padding: 0.95rem 1.15rem;
+      background: var(--copper);
+      color: var(--copper-ink);
+      font-weight: 700;
+    }
+    #submit:hover:not(:disabled) { background: #f0b06c; }
+    button:disabled { cursor: wait; opacity: 0.62; }
+    button:focus-visible, a.button:focus-visible, input:focus-visible {
+      outline: 2px solid var(--copper);
+      outline-offset: 3px;
+    }
+    #status { margin: 0.9rem 0 0; color: var(--ink); }
+    #status:empty { display: none; }
+    #status.error { color: var(--danger); }
+    #card {
+      margin-top: 1.6rem;
+      padding: 0.85rem;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: rgba(18, 21, 27, 0.88);
+      animation: rise 0.45s ease;
+    }
+    #card[hidden], #save[hidden], #thumb[hidden] { display: none; }
+    .stage {
+      display: flex;
+      justify-content: center;
+    }
+    .stage:has(#thumb[hidden]) { display: none; }
+    img {
+      display: block;
+      width: auto;
+      max-width: 100%;
+      height: auto;
+      max-height: min(52vh, 460px);
+      border-radius: 16px;
+      background: #07080b;
+    }
+    .copy { padding: 1rem 0.35rem 0.2rem; }
+    h2 {
+      margin: 0.2rem 0 0;
+      font-family: Palatino, "Palatino Linotype", Georgia, "Liberation Serif", serif;
+      font-size: clamp(1.55rem, 3vw, 2.25rem);
+      font-weight: 560;
+      letter-spacing: -0.03em;
+      line-height: 1.12;
+    }
+    .ok { margin: 0; color: var(--ok); font-size: 0.88rem; }
+    .meta { margin: 0.4rem 0 0; color: var(--muted); }
+    .options {
+      display: grid;
+      gap: 0.55rem;
+      margin: 1rem 0 0;
+    }
+    .option {
+      position: relative;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 0.75rem;
+      width: 100%;
+      min-height: 3.5rem;
+      padding: 0.8rem 0.9rem 0.95rem;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+      color: var(--ink);
+      text-align: left;
       cursor: pointer;
     }
-    button:disabled { cursor: wait; opacity: 0.7; }
-    button:focus-visible, a.button:focus-visible, input:focus, select:focus {
-      outline: 2px solid var(--green);
-      outline-offset: 2px;
-    }
-    #progress { margin-top: 1.25rem; }
-    #progress[hidden], #result[hidden] { display: none; }
-    .track {
-      height: 0.7rem;
+    .option:hover:not(:disabled) { border-color: rgba(231, 161, 90, 0.75); }
+    .option.ready { border-color: var(--copper); background: #241c15; }
+    .mark {
+      padding: 0.16rem 0.42rem;
       border: 1px solid var(--line);
-      background: #efeae1;
-      overflow: hidden;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
     }
-    .fill {
-      height: 100%;
+    .option[data-kind="audio"] .mark { color: var(--copper); }
+    .name { position: relative; min-width: 0; }
+    .size { position: relative; color: var(--muted); font-size: 0.92rem; white-space: nowrap; }
+    .bar {
+      position: absolute;
+      bottom: 0.38rem;
+      left: 0.7rem;
+      height: 3px;
       width: 0;
-      background: var(--amber);
+      max-width: calc(100% - 1.4rem);
+      border-radius: 99px;
+      background: var(--copper);
     }
-    .track.unknown .fill {
-      width: 35%;
-      animation: slide 1.1s ease-in-out infinite;
+    .hint { margin: 0.85rem 0.2rem 0; color: var(--muted); font-size: 0.92rem; }
+    #save {
+      margin-top: 1rem;
+      padding: 0.9rem;
+      border: 1px solid rgba(231, 161, 90, 0.4);
+      border-radius: 16px;
+      background: rgba(231, 161, 90, 0.08);
+    }
+    a.button {
+      display: block;
+      width: 100%;
+      padding: 0.95rem 1rem;
+      background: var(--ink);
+      color: #16130f;
+      font-weight: 700;
+    }
+    a.button:hover { background: #fff; }
+    #detail { margin: 0.55rem 0 0; color: var(--muted); }
+    footer { margin: 1.4rem 0 0; color: var(--muted); font-size: 0.88rem; }
+    @keyframes pulse {
+      70% { box-shadow: 0 0 0 8px rgba(231, 161, 90, 0); }
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: none; }
+    }
+    @media (min-width: 880px) {
+      .row { grid-template-columns: 1fr auto; align-items: center; }
+      #submit { width: auto; white-space: nowrap; }
+      .options { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 640px) {
+      main { width: 100%; padding: 1.3rem 1rem 2rem; }
+      h1 { font-size: 2.35rem; }
     }
     @media (prefers-reduced-motion: reduce) {
-      .track.unknown .fill { animation: none; width: 100%; opacity: 0.45; }
-    }
-    @keyframes slide {
-      from { transform: translateX(-120%); }
-      to { transform: translateX(320%); }
-    }
-    #status { min-height: 1.4rem; margin: 0.55rem 0 0; }
-    #result {
-      margin-top: 1rem;
-      padding-top: 1rem;
-      border-top: 1px solid #d9d2c5;
-    }
-    #detail { margin: 0.35rem 0 0.8rem; color: var(--muted); }
-    .error { color: var(--danger); }
-    footer { margin-top: 1.2rem; color: var(--muted); font-size: 0.9rem; }
-    @media (max-width: 640px) {
-      main { width: 100%; margin: 0; border-width: 0 0 1px; min-height: 100vh; }
+      .dot, #card { animation: none; }
     }
   </style>
 </head>
 <body>
   <main>
-    <h1>videograbber</h1>
-    <p class="lead">Вставьте ссылку. Программа соберёт один MP4 на этом компьютере.</p>
+    <p class="kicker"><span class="dot" aria-hidden="true"></span>На этом компьютере</p>
+    <h1>Скачать видео с YouTube и Rutube</h1>
+    <p class="lead">Вставьте ссылку на ролик YouTube или Rutube. Появятся название, автор и качества, которые есть у этого видео: MP4 до 1080p и MP3.</p>
     <form id="form">
-      <div class="field">
-        <label for="url">Ссылка</label>
-        <input id="url" name="url" type="url" inputmode="url" placeholder="https://" required autocomplete="url">
+      <label for="url">Ссылка</label>
+      <div class="row">
+        <input id="url" name="url" type="url" inputmode="url" placeholder="https://rutube.ru/video/…" required autocomplete="off">
+        <button id="submit" type="submit">Найти варианты для скачивания</button>
       </div>
-      <div class="field">
-        <label for="quality">Качество</label>
-        <select id="quality" name="quality">
-          <option value="best">Лучшее</option>
-          <option value="2160">2160p</option>
-          <option value="1440">1440p</option>
-          <option value="1080">1080p</option>
-          <option value="720" selected>720p</option>
-          <option value="480">480p</option>
-          <option value="360">360p</option>
-        </select>
-      </div>
-      <button id="submit" type="submit">Собрать MP4</button>
+      <p class="examples">
+        <span>youtube.com/watch?v=…</span>
+        <span>youtu.be/…</span>
+        <span>youtube.com/shorts/…</span>
+        <span>rutube.ru/video/…</span>
+      </p>
     </form>
-    <section id="progress" hidden>
-      <div id="track" class="track unknown" aria-hidden="true"><div id="fill" class="fill"></div></div>
-      <p id="status" role="status" aria-live="polite"></p>
+    <p id="status" role="status" aria-live="polite"></p>
+    <section id="card" hidden>
+      <div class="stage">
+        <img id="thumb" alt="">
+      </div>
+      <div class="copy">
+        <p class="ok">Ссылка распознана</p>
+        <h2 id="title"></h2>
+        <p id="meta" class="meta"></p>
+      </div>
+      <div id="options" class="options"></div>
+      <p class="hint">1080p — для большого экрана, 720p — для телефона. Если выбранное качество не скачалось, попробуйте качество пониже. Для музыки и лекций — MP3.</p>
+      <div id="save" hidden>
+        <a id="download" class="button" href="#">Сохранить файл</a>
+        <p id="detail"></p>
+      </div>
     </section>
-    <section id="result" hidden>
-      <p id="ready">Файл готов</p>
-      <p id="detail"></p>
-      <a id="download" class="button" href="#">Скачать MP4</a>
-    </section>
-    <footer>Сохраняйте только то, что вам разрешено скачивать.</footer>
+    <footer>Скачивайте только то, на сохранение чего у вас есть право. Готовый файл хранится на этом компьютере около 20 минут.</footer>
   </main>
   <script>
     const form = document.querySelector("#form");
     const submit = document.querySelector("#submit");
-    const progress = document.querySelector("#progress");
-    const result = document.querySelector("#result");
+    const input = document.querySelector("#url");
     const status = document.querySelector("#status");
-    const detail = document.querySelector("#detail");
-    const track = document.querySelector("#track");
-    const fill = document.querySelector("#fill");
+    const card = document.querySelector("#card");
+    const thumb = document.querySelector("#thumb");
+    const title = document.querySelector("#title");
+    const meta = document.querySelector("#meta");
+    const options = document.querySelector("#options");
+    const save = document.querySelector("#save");
     const download = document.querySelector("#download");
+    const detail = document.querySelector("#detail");
+    let currentUrl = "";
+    let source = null;
 
-    function setProgress(percent) {
-      if (percent === null || percent === undefined) {
-        track.classList.add("unknown");
-        fill.style.width = "";
-        return;
-      }
-      track.classList.remove("unknown");
-      fill.style.width = Math.max(0, Math.min(100, percent)) + "%";
-    }
+    const preset = new URLSearchParams(location.search).get("url");
+    if (preset) input.value = preset;
+    input.focus();
 
     function showError(message) {
       status.classList.add("error");
       status.textContent = message;
       submit.disabled = false;
-      submit.textContent = "Собрать MP4";
+      submit.textContent = "Найти варианты для скачивания";
+      for (const button of options.querySelectorAll("button")) button.disabled = false;
+    }
+
+    function post(path, body) {
+      return fetch(path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Videograbber": "1" },
+        body: JSON.stringify(body)
+      });
     }
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
-      result.hidden = true;
-      progress.hidden = false;
+      if (source) source.close();
+      card.hidden = true;
+      save.hidden = true;
+      options.replaceChildren();
       status.classList.remove("error");
-      status.textContent = "Отправляю ссылку";
-      setProgress(null);
+      status.textContent = "Ищу варианты…";
       submit.disabled = true;
-      submit.textContent = "Собираю…";
+      submit.textContent = "Ищу варианты…";
       let response;
       try {
-        response = await fetch("/api/jobs", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Videograbber": "1"
-          },
-          body: JSON.stringify({
-            url: document.querySelector("#url").value,
-            quality: document.querySelector("#quality").value
-          })
-        });
+        response = await post("/api/lookup", { url: input.value });
       } catch (error) {
         showError("Нет связи с программой.");
         return;
       }
-      const payload = await response.json();
+      const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
+        showError(payload.error || "Не удалось прочитать ролик.");
+        return;
+      }
+      currentUrl = payload.url || input.value;
+      title.textContent = payload.title || "Видео";
+      const bits = [];
+      if (payload.author) bits.push(payload.author);
+      if (payload.durationLabel) bits.push(payload.durationLabel);
+      meta.textContent = bits.join(" · ");
+      if (typeof payload.thumbnail === "string" && payload.thumbnail.startsWith("data:image/")) {
+        thumb.src = payload.thumbnail;
+        thumb.hidden = false;
+      } else {
+        thumb.removeAttribute("src");
+        thumb.hidden = true;
+      }
+      for (const option of payload.options || []) options.append(optionButton(option));
+      card.hidden = false;
+      status.textContent = "";
+      submit.disabled = false;
+      submit.textContent = "Найти варианты для скачивания";
+      card.scrollIntoView({ block: "nearest" });
+    });
+
+    function optionButton(option) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "option";
+      button.dataset.kind = option.kind === "audio" ? "audio" : "video";
+      const mark = document.createElement("span");
+      mark.className = "mark";
+      mark.textContent = option.kind === "audio" ? "MP3" : "MP4";
+      const name = document.createElement("span");
+      name.className = "name";
+      name.textContent = option.label || option.id;
+      const size = document.createElement("span");
+      size.className = "size";
+      size.textContent = option.sizeLabel || "";
+      const bar = document.createElement("span");
+      bar.className = "bar";
+      button.append(mark, name, size, bar);
+      button.addEventListener("click", () => startDownload(option, button, name, size, bar));
+      return button;
+    }
+
+    async function startDownload(option, button, name, size, bar) {
+      if (source) source.close();
+      save.hidden = true;
+      status.classList.remove("error");
+      status.textContent = "Готовлю файл…";
+      for (const item of options.querySelectorAll("button")) {
+        item.disabled = true;
+        item.classList.remove("ready");
+      }
+      name.textContent = "Готовлю файл…";
+      let response;
+      try {
+        response = await post("/api/jobs", { url: currentUrl, quality: option.id });
+      } catch (error) {
+        name.textContent = option.label || option.id;
+        showError("Нет связи с программой.");
+        return;
+      }
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        name.textContent = option.label || option.id;
         showError(payload.error || "Не удалось начать загрузку.");
         return;
       }
-      const source = new EventSource(payload.events);
+      source = new EventSource(payload.events);
       source.onmessage = (message) => {
         const data = JSON.parse(message.data);
         status.textContent = data.message || "";
-        setProgress(data.percent);
+        if (data.percent === null || data.percent === undefined) bar.style.width = "35%";
+        else {
+          bar.style.width = Math.max(0, Math.min(100, data.percent)) + "%";
+          size.textContent = data.percent + "%";
+        }
+        if (data.message) name.textContent = data.message;
         if (data.status === "done") {
           source.close();
-          progress.hidden = true;
+          name.textContent = option.label || "Готово";
+          size.textContent = "готово";
+          bar.style.width = "100%";
+          button.classList.add("ready");
           detail.textContent = data.detail || "";
           download.href = data.download;
           download.download = data.filename || "video.mp4";
-          result.hidden = false;
-          submit.disabled = false;
-          submit.textContent = "Собрать MP4";
+          download.textContent = "Сохранить файл";
+          save.hidden = false;
+          status.textContent = "Файл готов";
+          for (const item of options.querySelectorAll("button")) item.disabled = false;
+          save.scrollIntoView({ block: "nearest" });
         } else if (data.status === "error") {
           source.close();
-          showError(data.message || "Не удалось собрать видео.");
+          name.textContent = option.label || option.id;
+          size.textContent = option.sizeLabel || "";
+          bar.style.width = "0";
+          showError(data.message || "Не удалось скачать видео.");
         }
       };
       source.onerror = () => {
-        if (result.hidden && !status.classList.contains("error")) {
+        if (save.hidden && !status.classList.contains("error")) {
           source.close();
           showError("Соединение с программой прервалось.");
         }
       };
-    });
+    }
   </script>
 </body>
 </html>
