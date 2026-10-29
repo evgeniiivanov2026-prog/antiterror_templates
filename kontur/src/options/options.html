@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Контур — настройки</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="kicker">КОНТУР / ЛИНЗА</p>
+        <h1>Как читать ссылку</h1>
+        <p class="lede">
+          Карточка появляется у курсора. Сначала считают домен, подачу и форму адреса.
+          Gemini Nano подключается на устройстве, если модель уже скачана. В сеть текст уходит только в режиме облака.
+        </p>
+      </header>
+
+      <section class="block">
+        <h2>Появление</h2>
+        <label class="check">
+          <input id="enabled" type="checkbox" />
+          <span>Показывать карточку при наведении</span>
+        </label>
+        <label class="check">
+          <input id="all" type="checkbox" />
+          <span>Проверять все ссылки, не только похожие на материал</span>
+        </label>
+        <label class="range">
+          <span>Пауза перед карточкой <output id="delay-out">280</output> мс</span>
+          <input id="delay" type="range" min="120" max="800" step="20" />
+        </label>
+      </section>
+
+      <section class="block">
+        <h2>Модель</h2>
+        <p class="status" id="nano">Проверяем встроенную модель…</p>
+        <div class="modes" id="modes">
+          <label>
+            <input type="radio" name="mode" value="auto" />
+            <span>
+              <strong>Авто</strong>
+              <small>Сигналы всегда. Gemini Nano — если уже на устройстве.</small>
+            </span>
+          </label>
+          <label>
+            <input type="radio" name="mode" value="cloud" />
+            <span>
+              <strong>Облако</strong>
+              <small>Адрес, заголовок и короткий фрагмент уходят в Gemini.</small>
+            </span>
+          </label>
+          <label>
+            <input type="radio" name="mode" value="off" />
+            <span>
+              <strong>Только сигналы</strong>
+              <small>Без модели. Быстро и полностью локально.</small>
+            </span>
+          </label>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2>Ключ Gemini</h2>
+        <p class="note">Нужен только для режима «Облако». Ключ хранится в этом браузере и не синхронизируется.</p>
+        <label class="field">
+          <span>API-ключ</span>
+          <input id="key" type="password" autocomplete="off" spellcheck="false" placeholder="AIza…" />
+        </label>
+        <label class="field">
+          <span>Модель</span>
+          <input id="model" type="text" spellcheck="false" value="gemini-2.5-flash" />
+        </label>
+        <div class="row">
+          <button id="test" type="button">Проверить ключ</button>
+          <button id="clear" type="button" class="quiet">Очистить кэш оценок</button>
+        </div>
+        <p class="status" id="cloud-status"></p>
+      </section>
+
+      <p class="saved" id="saved" role="status"></p>
+    </main>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Лента — Контур</title>
+    <style>
+      :root { color-scheme: light; }
+      body {
+        margin: 0;
+        background: #efe7db;
+        color: #221e18;
+        font-family: Georgia, "Iowan Old Style", Palatino, serif;
+      }
+      main { width: min(680px, calc(100% - 40px)); margin: 0 auto; padding: 48px 0 96px; }
+      nav { display: flex; gap: 18px; font-family: "Segoe UI", sans-serif; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
+      nav a { color: #6d6458; text-decoration: none; }
+      h1 { font-weight: 500; font-size: 42px; letter-spacing: -0.03em; margin: 22px 0 8px; }
+      .note { font-family: "Segoe UI", sans-serif; color: #6d6458; line-height: 1.5; }
+      article { padding: 22px 0; border-top: 1px solid rgba(34, 30, 24, 0.14); }
+      .meta { font-family: "Segoe UI", sans-serif; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #8a7d6c; }
+      h2 { font-size: 28px; font-weight: 500; letter-spacing: -0.03em; line-height: 1.15; margin: 8px 0; }
+      a.story { color: inherit; text-decoration: none; }
+      a.story:hover { color: #4d3ec4; }
+      p { margin: 0; font-size: 18px; line-height: 1.45; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <nav>
+        <a id="link-nav" href="/">Главная</a>
+        <a href="/">Войти</a>
+      </nav>
+      <h1>Вечерняя лента</h1>
+      <p class="note">Демо для расширения «Контур». Наведите курсор на заголовок — карточка оценки появится рядом со ссылкой. Пункт «Главная» карточку не вызывает.</p>
+
+      <article>
+        <div class="meta">Агентство</div>
+        <h2><a id="link-wire" class="story" href="https://www.reuters.com/world/central-bank-holds-rates">Central bank holds rates as inflation cools further this quarter</a></h2>
+        <p>Спокойная заметка известного агентства. Ожидается высокая оценка источника.</p>
+      </article>
+
+      <article>
+        <div class="meta">Госисточник</div>
+        <h2><a id="link-state" class="story" href="https://tass.ru/ekonomika/1234567">По данным Минфина, дефицит бюджета за квартал составил 1,2 триллиона рублей</a></h2>
+        <p>Факт может быть, независимость источника — отдельный сигнал.</p>
+      </article>
+
+      <article>
+        <div class="meta">Сатира</div>
+        <h2><a id="link-satire" class="story" href="https://panorama.pub/politics/monday">Госдума предложила отменить понедельник насовсем</a></h2>
+        <p>Пародия. Контур должен сказать «сатира», а не «фейк».</p>
+      </article>
+
+      <article>
+        <div class="meta">Подозрительный тон</div>
+        <h2><a id="link-fake" class="story" href="https://worldnewsdailyreport.com/city-opens-library">СРОЧНО!!! Врачи молчат: чудо-средство, вы не поверите!!!</a></h2>
+        <p>Домен из каталога вымышленных газет и кликбейт в одной ссылке.</p>
+      </article>
+
+      <article>
+        <div class="meta">Неизвестный сайт</div>
+        <h2><a id="link-calm" class="story" href="https://notes.example/archive/long-read-about-cities">Вы не поверите, как изменилась набережная за десять лет ремонта</a></h2>
+        <p>Одной кликбейт-фразы мало, чтобы объявить материал фейком.</p>
+      </article>
+    </main>
+  </body>
+</html>

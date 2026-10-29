@@ -1,0 +1,117 @@
+@import url("../ui/fonts.css");
+
+:root {
+  color-scheme: dark;
+  --paper: #f4f0e7;
+  --muted: #b7b1a6;
+  --faint: #8a847a;
+  --accent: #d6ff4a;
+  --line: rgba(244, 240, 231, 0.1);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  width: 340px;
+  margin: 0;
+  padding: 16px;
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgba(214, 255, 74, 0.12), transparent 42%),
+    #101114;
+  color: var(--paper);
+  font-family: Manrope, "Segoe UI", sans-serif;
+  font-synthesis: none;
+}
+
+.top, .brand, .switch { display: flex; align-items: center; }
+.top { justify-content: space-between; gap: 12px; }
+
+.brand { gap: 10px; }
+.mark { width: 22px; height: 22px; color: var(--accent); }
+.name {
+  font-family: Unbounded, Manrope, sans-serif;
+  letter-spacing: 0.16em;
+  font-size: 14px;
+}
+.sub { color: var(--faint); font-size: 12px; margin-top: 2px; }
+
+.count {
+  min-width: 36px;
+  text-align: right;
+  font-family: "JetBrains Mono", monospace;
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.panel {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.kicker, .hint, .status, small {
+  margin: 0;
+}
+
+.kicker {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+  font-weight: 700;
+}
+
+.status { margin-top: 6px; font-size: 14px; line-height: 1.4; }
+
+.ghost, .text {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.ghost {
+  margin-top: 10px;
+  width: 100%;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: var(--accent);
+  color: #14160c;
+  font-weight: 700;
+}
+
+.ghost:disabled { opacity: 0.6; cursor: progress; }
+
+.switch {
+  gap: 12px;
+  margin-top: 14px;
+  align-items: flex-start;
+}
+
+.switch input {
+  margin-top: 3px;
+  accent-color: #d6ff4a;
+  width: 16px;
+  height: 16px;
+}
+
+.switch strong { display: block; font-size: 14px; }
+.switch small { display: block; margin-top: 3px; color: var(--muted); line-height: 1.4; }
+
+.hint {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.text {
+  margin-top: 12px;
+  padding: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}

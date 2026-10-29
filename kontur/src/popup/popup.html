@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Контур</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div class="brand">
+        <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M7.5 21.5a9.2 9.2 0 1 1 17 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"></path>
+          <circle cx="16" cy="16.2" r="1.7" fill="currentColor"></circle>
+        </svg>
+        <div>
+          <div class="name">КОНТУР</div>
+          <div class="sub">оценка новости</div>
+        </div>
+      </div>
+      <div class="count" id="count">0</div>
+    </header>
+
+    <section class="panel">
+      <p class="kicker">модель</p>
+      <p class="status" id="status">Проверяем Gemini Nano…</p>
+      <button class="ghost" id="download" type="button" hidden>Скачать модель на устройство</button>
+    </section>
+
+    <label class="switch">
+      <input id="enabled" type="checkbox" />
+      <span>
+        <strong>Показывать при наведении</strong>
+        <small>Карточка появляется у ссылки, похожей на материал.</small>
+      </span>
+    </label>
+
+    <p class="hint">Alt + наведение проверяет любую ссылку. Вердикт — оценка, не приговор.</p>
+
+    <button class="text" id="options" type="button">Настройки модели</button>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
