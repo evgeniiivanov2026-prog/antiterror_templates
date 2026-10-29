@@ -1,0 +1,209 @@
+@import url("../ui/fonts.css");
+
+:root {
+  color-scheme: dark;
+  --tone: #8ef6d6;
+  --ink: #eef3f8;
+  --muted: #93a0b3;
+  --line: rgba(255, 255, 255, 0.08);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: #090b10;
+}
+
+body {
+  width: 380px;
+}
+
+body {
+  padding: 16px;
+  color: var(--ink);
+  background:
+    radial-gradient(90% 50% at 0% 0%, rgba(142, 246, 214, 0.16), transparent 46%),
+    radial-gradient(80% 40% at 100% 0%, rgba(169, 155, 255, 0.18), transparent 42%),
+    #090b10;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+}
+
+.top {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.mark {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.mark svg { width: 26px; height: 26px; }
+
+.brand {
+  font-family: "Unbounded", "Manrope", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+}
+
+.top p, .switch-row span, #status, .empty {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.switch-row, form, section {
+  margin-top: 14px;
+}
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.switch-row strong { display: block; font-size: 13px; }
+.switch-row span { margin: 0; }
+
+.switch { position: relative; width: 44px; height: 26px; flex: none; }
+.switch input { position: absolute; opacity: 0; }
+.switch i {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: #232833;
+  transition: background 160ms ease;
+}
+.switch i::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #d5deea;
+  transition: transform 160ms ease;
+}
+.switch input:checked + i { background: var(--tone); }
+.switch input:checked + i::after { transform: translateX(18px); background: #08110f; }
+.switch input:focus-visible + i { outline: 2px solid var(--tone); outline-offset: 2px; }
+
+form, .checks { display: grid; gap: 10px; }
+
+label span, .delay span {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  color: #c5d0de;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+input[type="text"], input[type="password"], input[type="url"], select {
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font: 13px/1.3 "Manrope", sans-serif;
+}
+
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.checks label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: #d5deea;
+  font-size: 12.5px;
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--tone);
+}
+
+#test {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: var(--tone);
+  color: #08110f;
+  font: 600 13px/1 "Manrope", sans-serif;
+  cursor: pointer;
+}
+
+#test:disabled { opacity: 0.6; cursor: progress; }
+
+#status { min-height: 2.8em; }
+
+h2 {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+#history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  max-height: 180px;
+  overflow: auto;
+}
+
+#history li {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+#history .empty { display: block; background: transparent; padding: 0; }
+
+.score {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 13px;
+  color: var(--tone);
+}
+
+.item b { display: block; font-size: 12px; font-weight: 600; }
+.item span {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reliable, .leaning { --tone: #8ef6d6; }
+.mixed { --tone: #ffc27a; }
+.suspicious { --tone: #ff9b6a; }
+.likely_fake { --tone: #ff6d8a; }
+.satire { --tone: #c0b0ff; }
+.insufficient { --tone: #b7c0ce; }
