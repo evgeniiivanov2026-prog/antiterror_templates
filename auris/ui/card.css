@@ -65,7 +65,7 @@
 .panel[data-verdict="insufficient"] { --tone: #b7c0ce; }
 .panel[data-verdict="loading"] { --tone: #9ad7ff; }
 
-.top, .hero, .meters, .fold, .reasons, .foot, .title-line, .excerpt {
+.top, .hero, .meters, .fold, .reasons, .foot, .title-line, .excerpt, .learn {
   position: relative;
   z-index: 1;
 }
@@ -393,6 +393,42 @@
 }
 
 .pin.is-on {
+  color: #08110f;
+  background: var(--tone);
+}
+
+.learn {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.learn[hidden],
+.learn p[hidden] { display: none; }
+
+.learn p {
+  margin: 0;
+  color: #c5d0de;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.teach {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.teach button {
+  padding: 7px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  color: #e7eef8;
+  font-size: 11px;
+}
+
+.teach button.is-on {
   color: #08110f;
   background: var(--tone);
 }

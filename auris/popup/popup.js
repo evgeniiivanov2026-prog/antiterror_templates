@@ -1,12 +1,13 @@
 import { VERDICT_LABEL } from "../lib/copy.js";
 import { DEFAULT_SECRET, DEFAULT_SETTINGS, HISTORY_KEY, SECRET_KEY, SETTINGS_KEY, WELCOME_KEY } from "../lib/defaults.js";
+import { MEMORY_KEY, normalizeMemory, TEACH_VERDICTS } from "../lib/learn.js";
 import { present } from "../lib/present.js";
 import { assessPlain } from "../lib/text.js";
 
 const $ = (id) => document.getElementById(id);
 const hasChrome = Boolean(globalThis.chrome?.storage?.local && globalThis.chrome?.runtime?.id);
 
-const fields = ["enabled", "aiMode", "newsOnly", "deepFetch", "hoverDelay"];
+const fields = ["enabled", "aiMode", "newsOnly", "deepFetch", "hoverDelay", "learn"];
 const secretFields = ["provider", "apiKey", "model", "endpoint", "folderId"];
 
 if (hasChrome) boot();
@@ -26,19 +27,23 @@ $("test").addEventListener("click", testModel);
 $("check-tab").addEventListener("click", checkTab);
 $("check-text").addEventListener("click", checkText);
 $("guide").addEventListener("click", openGuide);
+$("forget").addEventListener("click", forgetMemory);
 $("intro-open").addEventListener("click", openGuide);
 $("intro-done").addEventListener("click", dismissIntro);
 
 function boot() {
-  chrome.storage.local.get([SETTINGS_KEY, SECRET_KEY, HISTORY_KEY, WELCOME_KEY], (data) => {
+  chrome.storage.local.get([SETTINGS_KEY, SECRET_KEY, HISTORY_KEY, WELCOME_KEY, MEMORY_KEY], (data) => {
     const settings = { ...DEFAULT_SETTINGS, ...(data[SETTINGS_KEY] || {}) };
     const secret = { ...DEFAULT_SECRET, ...(data[SECRET_KEY] || {}) };
     fill(settings, secret);
     paintHistory(data[HISTORY_KEY] || []);
+    paintMemory(data[MEMORY_KEY]);
     $("intro").hidden = Boolean(data[WELCOME_KEY]?.seen);
   });
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === "local" && changes[HISTORY_KEY]) paintHistory(changes[HISTORY_KEY].newValue || []);
+    if (area !== "local") return;
+    if (changes[HISTORY_KEY]) paintHistory(changes[HISTORY_KEY].newValue || []);
+    if (changes[MEMORY_KEY]) paintMemory(changes[MEMORY_KEY].newValue);
   });
 }
 
@@ -47,6 +52,7 @@ function fill(settings, secret) {
   $("aiMode").value = settings.aiMode;
   $("newsOnly").checked = settings.newsOnly;
   $("deepFetch").checked = settings.deepFetch;
+  $("learn").checked = settings.learn !== false;
   $("hoverDelay").value = String(settings.hoverDelay);
   $("delay-value").textContent = `${settings.hoverDelay} мс`;
   $("provider").value = secret.provider;
@@ -90,6 +96,7 @@ function save() {
     aiMode: $("aiMode").value,
     newsOnly: $("newsOnly").checked,
     deepFetch: $("deepFetch").checked,
+    learn: $("learn").checked,
     hoverDelay: Number($("hoverDelay").value),
   };
   const secret = {
@@ -179,6 +186,55 @@ function testModel() {
       : "";
     $("status").textContent = `${response?.message || "Нет ответа."}${extra}`;
   });
+}
+
+function forgetMemory() {
+  if (!hasChrome) return;
+  $("forget").disabled = true;
+  chrome.runtime.sendMessage({ type: "auris:forget" }, (response) => {
+    $("forget").disabled = false;
+    if (chrome.runtime.lastError || !response?.ok) {
+      $("status").textContent = "Память не очистилась. Откройте обычную вкладку и повторите.";
+      return;
+    }
+    paintMemory(response.memory);
+    $("status").textContent = "Память модели очищена. Она хранилась только в этом браузере.";
+  });
+}
+
+function paintMemory(value) {
+  const memory = normalizeMemory(value);
+  const list = $("memory");
+  const rows = Object.entries(memory.domains)
+    .map(([domain, slot]) => ({ domain, slot }))
+    .sort((a, b) => (b.slot.updated || 0) - (a.slot.updated || 0))
+    .slice(0, 8);
+  list.replaceChildren();
+  if (!rows.length) {
+    const empty = document.createElement("li");
+    empty.className = "empty";
+    empty.textContent = "Пока пусто. Оценки появятся после проверок.";
+    list.append(empty);
+    return;
+  }
+  for (const { domain, slot } of rows) {
+    const corrections = TEACH_VERDICTS.reduce((sum, verdict) => sum + (slot.corrections[verdict] || 0), 0);
+    const row = document.createElement("li");
+    const score = document.createElement("div");
+    score.className = "score";
+    score.textContent = slot.scores.length
+      ? String(Math.round(slot.scores.reduce((sum, item) => sum + item, 0) / slot.scores.length))
+      : "–";
+    const copy = document.createElement("div");
+    copy.className = "item";
+    const title = document.createElement("b");
+    title.textContent = domain;
+    const detail = document.createElement("span");
+    detail.textContent = `своих оценок ${slot.scores.length}, поправок ${corrections}`;
+    copy.append(title, detail);
+    row.append(score, copy);
+    list.append(row);
+  }
 }
 
 function paintHistory(items) {

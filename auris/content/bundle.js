@@ -13,8 +13,15 @@
     let openTimer = 0;
     let closeTimer = 0;
     let pinned = false;
+    let lastResult = null;
     lens.onPin((next) => {
       pinned = next;
+    });
+    lens.onTeach((verdict) => {
+      if (!lastResult || typeof env.teach !== "function") return;
+      env.teach(lastResult, verdict).then((next) => {
+        if (next) show(next, { pending: false });
+      });
     });
     const win = env.document.defaultView;
     env.document.addEventListener("mouseover", (event) => {
@@ -75,19 +82,25 @@
       lens.resetPin();
       const local = env.evaluate({ href, anchorText });
       const pending = settings.aiMode !== "local" || settings.deepFetch;
-      lens.render(env.present(local, { phase: "ready", pending }));
+      show(local, { phase: "ready", pending });
       lens.host.style.visibility = "hidden";
       lens.host.style.display = "block";
       place(link);
       lens.host.style.visibility = "visible";
-      if (!pending) return;
       const enriched = await env.requestEnrich({ href, anchorText });
       if (myToken !== token || !enriched) {
-        if (myToken === token) lens.render(env.present(local, { pending: false }));
+        if (myToken === token) show(local, { pending: false });
         return;
       }
-      lens.render(env.present(enriched, { pending: false }));
+      show(enriched, { pending: false });
       place(link);
+    }
+    function show(result, extra = {}) {
+      const finished = typeof env.finish === "function" ? env.finish(result) : result;
+      lastResult = finished;
+      const learn = env.getSettings().learn !== false;
+      lens.render(env.present(finished, { ...extra, learn }));
+      return finished;
     }
     function hide(force) {
       if (pinned && !force) return;
@@ -123,9 +136,8 @@
       const viewed = typeof env.applyText === "function" ? env.applyText(local, text, { mode }) : local;
       const length = String(text || "").trim().length;
       const pending = settings.aiMode !== "local" && length >= (mode === "page" ? 200 : 80);
-      lens.render(env.present(viewed, { pending }));
+      show(viewed, { pending });
       revealAt(point);
-      if (!pending) return;
       const enriched = await env.requestEnrich({
         href,
         anchorText: String(title || "").slice(0, 400),
@@ -134,10 +146,10 @@
         mode
       });
       if (myToken !== token || !enriched) {
-        if (myToken === token) lens.render(env.present(viewed, { pending: false }));
+        if (myToken === token) show(viewed, { pending: false });
         return;
       }
-      lens.render(env.present(enriched, { pending: false }));
+      show(enriched, { pending: false });
     }
     function considerSelection() {
       if (!env.getSettings().enabled) return;
@@ -259,6 +271,9 @@
       fold: panel.querySelector("[data-fold]"),
       reasons: panel.querySelector("[data-reasons]"),
       pin: panel.querySelector("[data-pin]"),
+      learn: panel.querySelector("[data-learn]"),
+      memory: panel.querySelector("[data-memory]"),
+      teach: [...panel.querySelectorAll("[data-teach]")],
       meters: {
         source: panel.querySelector('[data-meter="source"]'),
         rhetoric: panel.querySelector('[data-meter="rhetoric"]'),
@@ -268,6 +283,8 @@
     };
     let pinned = false;
     let pinListener = () => {
+    };
+    let teachListener = () => {
     };
     els.arc.style.strokeDasharray = `${CIRC} ${CIRC}`;
     els.arc.style.strokeDashoffset = `${CIRC}`;
@@ -283,6 +300,13 @@
       event.stopPropagation();
       setPinned(!pinned);
     });
+    for (const button of els.teach) {
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        teachListener(button.dataset.teach);
+      });
+    }
     function render(view) {
       const loading = view.phase === "loading";
       panel.dataset.verdict = loading ? "loading" : view.verdict;
@@ -314,6 +338,13 @@
         const value = loading ? 12 : Math.round(view.meters?.[key] ?? 0);
         els.meters[key].style.width = `${value}%`;
       }
+      const showLearn = Boolean(view.learn) && !loading && Boolean(view.domain);
+      els.learn.hidden = !showLearn;
+      els.memory.hidden = !view.memoryNote;
+      els.memory.textContent = view.memoryNote || "";
+      for (const button of els.teach) {
+        button.classList.toggle("is-on", button.dataset.teach === view.taught);
+      }
     }
     function setPinned(next) {
       pinned = Boolean(next);
@@ -334,6 +365,9 @@
       },
       onPin(listener) {
         pinListener = listener;
+      },
+      onTeach(listener) {
+        teachListener = listener;
       }
     };
   }
@@ -405,6 +439,14 @@
       </svg>
     </button>
     <ul class="reasons" data-reasons hidden></ul>
+    <div class="learn" data-learn hidden>
+      <p data-memory hidden></p>
+      <div class="teach">
+        <button type="button" data-teach="reliable">\u041D\u0430\u0434\u0451\u0436\u043D\u043E</button>
+        <button type="button" data-teach="suspicious">\u0421\u043E\u043C\u043D\u0438\u0442\u0435\u043B\u044C\u043D\u043E</button>
+        <button type="button" data-teach="likely_fake">\u0424\u0435\u0439\u043A</button>
+      </div>
+    </div>
     <footer class="foot">
       <p>\u0412\u0435\u0440\u043E\u044F\u0442\u043D\u043E\u0441\u0442\u043D\u0430\u044F \u043E\u0446\u0435\u043D\u043A\u0430, \u043D\u0435 \u0432\u0435\u0440\u0434\u0438\u043A\u0442 \u0444\u0430\u043A\u0442\u0447\u0435\u043A\u0435\u0440\u0430.</p>
       <button type="button" class="pin" data-pin>\u0417\u0430\u043A\u0440\u0435\u043F\u0438\u0442\u044C</button>
@@ -1084,7 +1126,10 @@
       href: result?.href || "",
       title: result?.title || "",
       textExcerpt: result?.textExcerpt || "",
-      languageNote: result?.languageNote || ""
+      languageNote: result?.languageNote || "",
+      memoryNote: result?.memoryNote || "",
+      taught: result?.taught || "",
+      learn: extra.learn !== false && Boolean(result?.domain)
     };
   }
 
@@ -1250,15 +1295,164 @@
     hoverDelay: 260,
     newsOnly: true,
     deepFetch: true,
-    aiMode: "auto"
+    aiMode: "auto",
+    learn: true
   };
   var SETTINGS_KEY = "auris.settings";
+
+  // auris/lib/learn.js
+  var MEMORY_KEY = "auris.memory";
+  var TEACH_VERDICTS = ["reliable", "suspicious", "likely_fake"];
+  var ANCHOR = {
+    reliable: 86,
+    suspicious: 40,
+    likely_fake: 16
+  };
+  function emptyMemory() {
+    return { domains: {}, lessons: [] };
+  }
+  function normalizeMemory(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const domains = {};
+    for (const [domain, slot] of Object.entries(source.domains || {})) {
+      if (!domain || !slot || typeof slot !== "object") continue;
+      domains[domain] = {
+        scores: Array.isArray(slot.scores) ? slot.scores.map(Number).filter(Number.isFinite).slice(-12) : [],
+        corrections: countCorrections(slot.corrections),
+        updated: Number(slot.updated) || 0
+      };
+    }
+    const lessons = Array.isArray(source.lessons) ? source.lessons.filter((item) => item?.domain && TEACH_VERDICTS.includes(item.verdict)).slice(0, 24) : [];
+    return { domains, lessons };
+  }
+  function applyMemory(result, memory, { enabled = true } = {}) {
+    if (!result) return result;
+    const base = baseOf(result);
+    const carried = {
+      ...base,
+      ...baseFields(base),
+      memoryApplied: true,
+      memoryNote: "",
+      taught: ""
+    };
+    if (!enabled || !base.domain) return carried;
+    const slot = normalizeMemory(memory).domains[base.domain];
+    if (!slot) return carried;
+    if (base.verdict === "satire" || base.flags?.satire) {
+      return { ...carried, memoryNote: "\u0421\u0430\u0442\u0438\u0440\u0430 \u0432 \u043F\u0430\u043C\u044F\u0442\u0438 \u043D\u0435 \u043F\u0435\u0440\u0435\u0443\u0447\u0438\u0432\u0430\u0435\u0442\u0441\u044F." };
+    }
+    const corrections = correctionCount(slot.corrections);
+    const seen = slot.scores.length;
+    const autoMean = seen ? slot.scores.reduce((sum, score2) => sum + score2, 0) / seen : base.score;
+    if (!corrections && seen < 2) {
+      return { ...carried, memoryNote: seen ? "\u041F\u0430\u043C\u044F\u0442\u044C: \u043E\u0434\u043D\u0430 \u0441\u0432\u043E\u044F \u043E\u0446\u0435\u043D\u043A\u0430, \u0441\u0434\u0432\u0438\u0433\u0430 \u0435\u0449\u0451 \u043D\u0435\u0442." : "" };
+    }
+    const userMean = corrections ? userScore(slot.corrections) : autoMean;
+    const weight = corrections ? Math.min(0.62, 0.34 + 0.14 * (corrections - 1)) : Math.min(0.42, 0.05 * seen);
+    const target = corrections ? userMean * 0.8 + autoMean * 0.2 : autoMean;
+    let score = Math.round(base.score * (1 - weight) + target * weight);
+    score = railScore2(base, score);
+    const flags = { ...base.flags };
+    const taught = dominantCorrection(slot.corrections);
+    if (corrections && (taught === "likely_fake" || taught === "suspicious")) flags.harsh = true;
+    if (!corrections && seen >= 4 && autoMean <= 36) flags.harsh = true;
+    const settled = settle(base, {
+      score,
+      flags,
+      reasons: unique2([memoryReason(slot), ...base.reasons])
+    });
+    return {
+      ...settled,
+      ...baseFields(base),
+      memoryApplied: true,
+      memoryNote: memoryReason(slot),
+      taught: taught || ""
+    };
+  }
+  function baseOf(result) {
+    if (result.memoryApplied && Number.isFinite(result.baseScore)) {
+      return {
+        ...result,
+        score: result.baseScore,
+        verdict: result.baseVerdict || result.verdict,
+        summary: result.baseSummary || result.summary,
+        reasons: result.baseReasons || result.reasons
+      };
+    }
+    return result;
+  }
+  function baseFields(base) {
+    return {
+      baseScore: base.score,
+      baseVerdict: base.verdict,
+      baseSummary: base.summary,
+      baseReasons: Array.isArray(base.reasons) ? base.reasons.slice(0, 6) : []
+    };
+  }
+  function railScore2(base, score) {
+    let next = score;
+    if (base.flags?.impersonation) next = Math.min(next, base.score);
+    const tier = base.source?.tier;
+    if ((tier === "official" || tier === "registry") && next < Math.min(base.score, 52)) next = Math.min(base.score, 52);
+    return clamp(Math.round(next), 3, 96);
+  }
+  function memoryReason(slot) {
+    const bits = [];
+    if (slot.scores.length) bits.push(`\u0441\u0432\u043E\u0438\u0445 \u043E\u0446\u0435\u043D\u043E\u043A ${slot.scores.length}`);
+    const corrections = correctionCount(slot.corrections);
+    if (corrections) bits.push(`\u043F\u043E\u043F\u0440\u0430\u0432\u043E\u043A ${corrections}`);
+    return `\u041F\u0430\u043C\u044F\u0442\u044C \u043C\u043E\u0434\u0435\u043B\u0438 \u043F\u043E \u0434\u043E\u043C\u0435\u043D\u0443: ${bits.join(", ")}.`;
+  }
+  function userScore(corrections) {
+    let total = 0;
+    let weight = 0;
+    for (const verdict of TEACH_VERDICTS) {
+      const count = corrections[verdict] || 0;
+      total += ANCHOR[verdict] * count;
+      weight += count;
+    }
+    return weight ? total / weight : 50;
+  }
+  function dominantCorrection(corrections) {
+    let best = "";
+    let count = 0;
+    for (const verdict of TEACH_VERDICTS) {
+      if ((corrections[verdict] || 0) > count) {
+        best = verdict;
+        count = corrections[verdict];
+      }
+    }
+    return best;
+  }
+  function correctionCount(corrections) {
+    return TEACH_VERDICTS.reduce((sum, verdict) => sum + (corrections?.[verdict] || 0), 0);
+  }
+  function countCorrections(value) {
+    return {
+      reliable: Math.max(0, Number(value?.reliable) || 0),
+      suspicious: Math.max(0, Number(value?.suspicious) || 0),
+      likely_fake: Math.max(0, Number(value?.likely_fake) || 0)
+    };
+  }
+  function unique2(items) {
+    const seen = /* @__PURE__ */ new Set();
+    const out = [];
+    for (const item of items) {
+      const line = String(item || "").trim();
+      if (!line || seen.has(line)) continue;
+      seen.add(line);
+      out.push(line);
+    }
+    return out.slice(0, 6);
+  }
 
   // auris/content/content.js
   if (document.documentElement.dataset.aurisPreview !== "true") {
     let settings = { ...DEFAULT_SETTINGS };
-    chrome.storage.local.get(SETTINGS_KEY, (data) => {
+    let memory = emptyMemory();
+    chrome.storage.local.get([SETTINGS_KEY, MEMORY_KEY], (data) => {
       settings = { ...DEFAULT_SETTINGS, ...data?.[SETTINGS_KEY] || {} };
+      memory = normalizeMemory(data?.[MEMORY_KEY]);
     });
     const hover = attachHover({
       document,
@@ -1268,6 +1462,30 @@
       shouldInspect,
       present,
       getSettings: () => settings,
+      finish: (result) => {
+        if (!result || result.memoryApplied) return result;
+        return applyMemory(result, memory, { enabled: settings.learn !== false });
+      },
+      teach: (result, verdict) => new Promise((resolve) => {
+        try {
+          chrome.runtime.sendMessage({
+            type: "auris:learn",
+            domain: result?.domain || "",
+            href: result?.href || "",
+            title: result?.title || result?.domain || "",
+            verdict,
+            result
+          }, (response) => {
+            if (chrome.runtime.lastError || !response?.ok) resolve(null);
+            else {
+              if (response.memory) memory = normalizeMemory(response.memory);
+              resolve(response.result || null);
+            }
+          });
+        } catch {
+          resolve(null);
+        }
+      }),
       requestEnrich: (payload) => new Promise((resolve) => {
         const timer = setTimeout(() => resolve(null), 16e3);
         try {
@@ -1299,10 +1517,12 @@
       sendResponse({ ok: true });
     });
     chrome.storage.onChanged.addListener((changes, area) => {
-      if (area === "local" && changes[SETTINGS_KEY]?.newValue) {
+      if (area !== "local") return;
+      if (changes[SETTINGS_KEY]?.newValue) {
         settings = { ...DEFAULT_SETTINGS, ...changes[SETTINGS_KEY].newValue };
         if (!settings.enabled) hover.hide(true);
       }
+      if (changes[MEMORY_KEY]) memory = normalizeMemory(changes[MEMORY_KEY].newValue);
     });
   }
 })();

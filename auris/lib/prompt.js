@@ -5,6 +5,7 @@ export const SYSTEM_PROMPT = `Ты AURIS, аккуратный аналитик 
 Если дан фрагмент текста, суди и по нему. Язык материала не повод снижать оценку.
 Сатиру помечай satire, а не likely_fake.
 Государственное СМИ без следов прямой фабрикации — mixed.
+Память прошлых оценок и поправок человека учитывай, но она не отменяет сатиру и явный поддельный домен.
 Вердикты только такие: reliable, leaning, mixed, suspicious, likely_fake, satire, insufficient.
 score: 0 — явная мистификация, 100 — очень надёжная новость.
 confidence: хватает ли входных данных, число от 0 до 1.
@@ -22,6 +23,12 @@ export function buildUserPrompt(input) {
     `Описание: ${clip(input.description, 600)}`,
     `Фрагмент текста: ${clip(input.body, 1200)}`,
     `Локальная оценка: ${Number(input.score) || 0}/100, вердикт ${clip(input.verdict, 40)}.`,
+    ...memoryLine(input.memory),
     "Верни JSON {\"score\":0-100,\"verdict\":\"reliable|leaning|mixed|suspicious|likely_fake|satire|insufficient\",\"confidence\":0-1,\"summary\":\"...\",\"signals\":[\"...\"]}",
   ].join("\n");
+}
+
+function memoryLine(value) {
+  const text = String(value || "").trim().slice(0, 700);
+  return text ? [text] : [];
 }

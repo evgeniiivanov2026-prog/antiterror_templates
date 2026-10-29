@@ -44,6 +44,9 @@ export function createLens(doc = document, options = {}) {
     fold: panel.querySelector("[data-fold]"),
     reasons: panel.querySelector("[data-reasons]"),
     pin: panel.querySelector("[data-pin]"),
+    learn: panel.querySelector("[data-learn]"),
+    memory: panel.querySelector("[data-memory]"),
+    teach: [...panel.querySelectorAll("[data-teach]")],
     meters: {
       source: panel.querySelector('[data-meter="source"]'),
       rhetoric: panel.querySelector('[data-meter="rhetoric"]'),
@@ -54,6 +57,7 @@ export function createLens(doc = document, options = {}) {
 
   let pinned = false;
   let pinListener = () => {};
+  let teachListener = () => {};
 
   els.arc.style.strokeDasharray = `${CIRC} ${CIRC}`;
   els.arc.style.strokeDashoffset = `${CIRC}`;
@@ -71,6 +75,14 @@ export function createLens(doc = document, options = {}) {
     event.stopPropagation();
     setPinned(!pinned);
   });
+
+  for (const button of els.teach) {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      teachListener(button.dataset.teach);
+    });
+  }
 
   function render(view) {
     const loading = view.phase === "loading";
@@ -105,6 +117,13 @@ export function createLens(doc = document, options = {}) {
       const value = loading ? 12 : Math.round(view.meters?.[key] ?? 0);
       els.meters[key].style.width = `${value}%`;
     }
+    const showLearn = Boolean(view.learn) && !loading && Boolean(view.domain);
+    els.learn.hidden = !showLearn;
+    els.memory.hidden = !view.memoryNote;
+    els.memory.textContent = view.memoryNote || "";
+    for (const button of els.teach) {
+      button.classList.toggle("is-on", button.dataset.teach === view.taught);
+    }
   }
 
   function setPinned(next) {
@@ -127,6 +146,9 @@ export function createLens(doc = document, options = {}) {
     },
     onPin(listener) {
       pinListener = listener;
+    },
+    onTeach(listener) {
+      teachListener = listener;
     },
   };
 }
@@ -200,6 +222,14 @@ function buildPanel(doc) {
       </svg>
     </button>
     <ul class="reasons" data-reasons hidden></ul>
+    <div class="learn" data-learn hidden>
+      <p data-memory hidden></p>
+      <div class="teach">
+        <button type="button" data-teach="reliable">Надёжно</button>
+        <button type="button" data-teach="suspicious">Сомнительно</button>
+        <button type="button" data-teach="likely_fake">Фейк</button>
+      </div>
+    </div>
     <footer class="foot">
       <p>Вероятностная оценка, не вердикт фактчекера.</p>
       <button type="button" class="pin" data-pin>Закрепить</button>

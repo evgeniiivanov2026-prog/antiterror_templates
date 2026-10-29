@@ -6,6 +6,7 @@ import { fuse } from "../lib/model.js";
 import { buildUserPrompt, SYSTEM_PROMPT } from "../lib/prompt.js";
 import { applyText, assessPlain, MIN_ARTICLE_CHARS } from "../lib/text.js";
 import { DEFAULT_SECRET, DEFAULT_SETTINGS, HISTORY_KEY, SECRET_KEY, SETTINGS_KEY, WELCOME_KEY } from "../lib/defaults.js";
+import { applyMemory, forgetMemory, MEMORY_KEY, normalizeMemory, promptMemory, rememberAuto, rememberUser } from "../lib/learn.js";
 
 const cache = new Map();
 const inflight = new Map();
@@ -28,6 +29,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "auris:test-ai") {
     testAI().then(sendResponse).catch((error) => {
       sendResponse({ ok: false, message: error instanceof Error ? error.message : "test failed" });
+    });
+    return true;
+  }
+  if (message.type === "auris:learn") {
+    teach(message).then(sendResponse).catch((error) => {
+      sendResponse({ ok: false, error: error instanceof Error ? error.message : "learn failed" });
+    });
+    return true;
+  }
+  if (message.type === "auris:forget") {
+    forget().then(sendResponse).catch((error) => {
+      sendResponse({ ok: false, error: error instanceof Error ? error.message : "forget failed" });
     });
     return true;
   }
@@ -146,6 +159,7 @@ async function enrichLive(message, signal, superseded) {
   const thin = mode === "page"
     ? givenText.trim().length < MIN_ARTICLE_CHARS
     : (mode !== "hover" && givenText.trim().length < 80);
+  const memory = settings.learn === false ? null : await loadMemory();
   let result = local;
   if (settings.aiMode !== "local" && !thin) {
     if (superseded.aborted) return { ok: false, stale: true };
@@ -153,7 +167,13 @@ async function enrichLive(message, signal, superseded) {
       mode: settings.aiMode,
       secret,
       system: SYSTEM_PROMPT,
-      prompt: buildUserPrompt({ ...local, anchorText, description, body }),
+      prompt: buildUserPrompt({
+        ...local,
+        anchorText,
+        description,
+        body,
+        memory: memory ? promptMemory(memory, local.domain) : "",
+      }),
       signal,
     });
     if (superseded.aborted) return { ok: false, stale: true };
@@ -166,9 +186,48 @@ async function enrichLive(message, signal, superseded) {
     }
   }
 
+  if (settings.learn !== false && result.domain) {
+    const fresh = await loadMemory();
+    const nextMemory = rememberAuto(fresh, result);
+    await chrome.storage.local.set({ [MEMORY_KEY]: nextMemory });
+    result = applyMemory(result, nextMemory, { enabled: true });
+  }
   if (mode === "hover") cache.set(key, { at: Date.now(), result });
   if (result.href) await pushHistory(result);
   return { ok: true, result };
+}
+
+async function teach(message) {
+  const memory = rememberUser(await loadMemory(), {
+    domain: message.domain,
+    href: message.href,
+    title: message.title,
+    verdict: message.verdict,
+  });
+  await chrome.storage.local.set({ [MEMORY_KEY]: memory });
+  const domain = String(message.domain || "");
+  if (domain) {
+    for (const [key, entry] of cache) {
+      if (entry?.result?.domain === domain) cache.delete(key);
+    }
+  }
+  const settings = await getSettings();
+  const result = message.result
+    ? applyMemory(message.result, memory, { enabled: settings.learn !== false })
+    : null;
+  return { ok: true, result, memory };
+}
+
+async function forget() {
+  const memory = forgetMemory();
+  await chrome.storage.local.set({ [MEMORY_KEY]: memory });
+  cache.clear();
+  return { ok: true, memory };
+}
+
+async function loadMemory() {
+  const data = await chrome.storage.local.get(MEMORY_KEY);
+  return normalizeMemory(data[MEMORY_KEY]);
 }
 
 async function testAI() {

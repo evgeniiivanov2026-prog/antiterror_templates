@@ -22,5 +22,8 @@ export function present(result, extra = {}) {
     title: result?.title || "",
     textExcerpt: result?.textExcerpt || "",
     languageNote: result?.languageNote || "",
+    memoryNote: result?.memoryNote || "",
+    taught: result?.taught || "",
+    learn: extra.learn !== false && Boolean(result?.domain),
   };
 }

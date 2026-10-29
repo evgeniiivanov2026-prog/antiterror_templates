@@ -12,9 +12,17 @@ export function attachHover(env) {
   let openTimer = 0;
   let closeTimer = 0;
   let pinned = false;
+  let lastResult = null;
 
   lens.onPin((next) => {
     pinned = next;
+  });
+
+  lens.onTeach((verdict) => {
+    if (!lastResult || typeof env.teach !== "function") return;
+    env.teach(lastResult, verdict).then((next) => {
+      if (next) show(next, { pending: false });
+    });
   });
 
   const win = env.document.defaultView;
@@ -87,20 +95,27 @@ export function attachHover(env) {
 
     const local = env.evaluate({ href, anchorText });
     const pending = settings.aiMode !== "local" || settings.deepFetch;
-    lens.render(env.present(local, { phase: "ready", pending }));
+    show(local, { phase: "ready", pending });
     lens.host.style.visibility = "hidden";
     lens.host.style.display = "block";
     place(link);
     lens.host.style.visibility = "visible";
 
-    if (!pending) return;
     const enriched = await env.requestEnrich({ href, anchorText });
     if (myToken !== token || !enriched) {
-      if (myToken === token) lens.render(env.present(local, { pending: false }));
+      if (myToken === token) show(local, { pending: false });
       return;
     }
-    lens.render(env.present(enriched, { pending: false }));
+    show(enriched, { pending: false });
     place(link);
+  }
+
+  function show(result, extra = {}) {
+    const finished = typeof env.finish === "function" ? env.finish(result) : result;
+    lastResult = finished;
+    const learn = env.getSettings().learn !== false;
+    lens.render(env.present(finished, { ...extra, learn }));
+    return finished;
   }
 
   function hide(force) {
@@ -140,9 +155,8 @@ export function attachHover(env) {
     const viewed = typeof env.applyText === "function" ? env.applyText(local, text, { mode }) : local;
     const length = String(text || "").trim().length;
     const pending = settings.aiMode !== "local" && length >= (mode === "page" ? 200 : 80);
-    lens.render(env.present(viewed, { pending }));
+    show(viewed, { pending });
     revealAt(point);
-    if (!pending) return;
 
     const enriched = await env.requestEnrich({
       href,
@@ -152,10 +166,10 @@ export function attachHover(env) {
       mode,
     });
     if (myToken !== token || !enriched) {
-      if (myToken === token) lens.render(env.present(viewed, { pending: false }));
+      if (myToken === token) show(viewed, { pending: false });
       return;
     }
-    lens.render(env.present(enriched, { pending: false }));
+    show(enriched, { pending: false });
   }
 
   function considerSelection() {

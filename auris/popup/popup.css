@@ -170,7 +170,7 @@ textarea {
 
 .check { display: grid; gap: 10px; }
 
-#check-tab, #check-text, #test, #intro-open, #guide {
+#check-tab, #check-text, #test, #intro-open, #guide, #forget {
   border: 0;
   border-radius: 999px;
   padding: 10px 14px;
@@ -180,7 +180,7 @@ textarea {
   cursor: pointer;
 }
 
-#check-tab, #intro-done, #guide {
+#check-tab, #intro-done, #guide, #forget {
   background: transparent;
   color: var(--ink);
   box-shadow: inset 0 0 0 1px var(--line);
@@ -221,7 +221,7 @@ h2 {
   color: var(--muted);
 }
 
-#history {
+#memory, #history {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -231,7 +231,10 @@ h2 {
   overflow: auto;
 }
 
-#history li {
+#memory { max-height: 140px; }
+#forget { margin-top: 8px; }
+
+#history li, #memory li {
   display: grid;
   grid-template-columns: 36px 1fr;
   gap: 8px;
@@ -241,7 +244,7 @@ h2 {
   background: rgba(255, 255, 255, 0.03);
 }
 
-#history .empty { display: block; background: transparent; padding: 0; }
+#history .empty, #memory .empty { display: block; background: transparent; padding: 0; }
 
 .score {
   font-family: "JetBrains Mono", ui-monospace, monospace;

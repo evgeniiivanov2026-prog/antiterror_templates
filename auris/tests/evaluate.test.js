@@ -8,6 +8,7 @@ import { applyMeta, evaluateLink, shouldInspect } from "../lib/evaluate.js";
 import { extractMeta } from "../lib/meta.js";
 import { fuse, parseModelJson } from "../lib/model.js";
 import { buildUserPrompt } from "../lib/prompt.js";
+import { applyMemory, emptyMemory, promptMemory, rememberAuto, rememberUser } from "../lib/learn.js";
 import { applyText, assessPlain, detectLanguage } from "../lib/text.js";
 
 test("an official russian site in the bank is good", () => {
@@ -322,4 +323,83 @@ test("pasted text is judged without a domain", () => {
   assert.equal(sourced.verdict, "mixed");
   assert.doesNotMatch(sourced.summary, /известной редакции/);
   assert.match(sourced.summary, /не фейк/);
+});
+
+test("memory does not move a score until the domain repeats", () => {
+  const base = evaluateLink({ href: "https://example.com/about", anchorText: "About" });
+  const untouched = applyMemory(base, emptyMemory());
+  assert.equal(untouched.score, base.score);
+  assert.equal(untouched.verdict, base.verdict);
+
+  const once = applyMemory(base, rememberAuto(emptyMemory(), base));
+  assert.equal(once.score, base.score);
+  assert.equal(once.baseScore, base.score);
+  assert.match(once.memoryNote, /одна своя оценка/);
+  const fromCard = applyMemory(once, rememberUser(emptyMemory(), { domain: base.domain, verdict: "likely_fake" }));
+  const direct = applyMemory(base, rememberUser(emptyMemory(), { domain: base.domain, verdict: "likely_fake" }));
+  assert.equal(fromCard.score, direct.score);
+  assert.equal(fromCard.verdict, direct.verdict);
+});
+
+test("repeated low scores and human corrections can change an unknown domain", () => {
+  const base = evaluateLink({ href: "https://example.com/about", anchorText: "About" });
+  let low = emptyMemory();
+  for (let i = 0; i < 4; i += 1) low = rememberAuto(low, { domain: base.domain, score: 20 });
+  const shifted = applyMemory(base, low);
+  assert.ok(shifted.score < base.score);
+  assert.equal(shifted.verdict, "suspicious");
+  assert.equal(shifted.flags.harsh, true);
+
+  let taught = rememberUser(emptyMemory(), {
+    domain: base.domain,
+    href: base.href,
+    title: "About",
+    verdict: "likely_fake",
+  });
+  const one = applyMemory(base, taught);
+  assert.equal(one.verdict, "suspicious");
+  assert.equal(one.taught, "likely_fake");
+  taught = rememberUser(taught, { domain: base.domain, verdict: "likely_fake" });
+  taught = rememberUser(taught, { domain: base.domain, verdict: "likely_fake" });
+  const three = applyMemory(base, taught);
+  assert.equal(three.verdict, "likely_fake");
+  assert.ok(three.score < 34);
+
+  const again = applyMemory(three, taught);
+  assert.equal(again.score, three.score);
+  const stored = rememberAuto(taught, three);
+  assert.equal(stored.domains[base.domain].scores.at(-1), three.baseScore);
+  assert.notEqual(three.score, three.baseScore);
+  assert.match(promptMemory(taught, base.domain), /example\.com/);
+  assert.match(promptMemory(taught, base.domain), /Похоже на фейк/);
+  assert.match(buildUserPrompt({ ...base, memory: promptMemory(taught, base.domain) }), /example\.com/);
+});
+
+test("memory keeps satire, impersonation and the russian bank on their rails", () => {
+  const onion = evaluateLink({
+    href: "https://www.theonion.com/story",
+    anchorText: "Nation Announces It Did The Thing",
+  });
+  const satire = applyMemory(onion, rememberUser(emptyMemory(), { domain: onion.domain, verdict: "likely_fake" }));
+  assert.equal(satire.verdict, "satire");
+  assert.equal(satire.score, onion.score);
+  assert.match(satire.memoryNote, /Сатира/);
+
+  const look = evaluateLink({
+    href: "https://reuters.xyz/breaking-news",
+    anchorText: "Reuters breaking news",
+  });
+  let raised = emptyMemory();
+  for (let i = 0; i < 3; i += 1) raised = rememberUser(raised, { domain: look.domain, verdict: "reliable" });
+  const impersonation = applyMemory(look, raised);
+  assert.ok(impersonation.score <= look.score);
+  assert.notEqual(impersonation.verdict, "reliable");
+
+  const official = evaluateLink({
+    href: "https://www.fedsfm.ru/documents/terr-list",
+    anchorText: "Росфинмониторинг: перечень",
+  });
+  const kept = applyMemory(official, rememberUser(emptyMemory(), { domain: official.domain, verdict: "likely_fake" }));
+  assert.notEqual(kept.verdict, "likely_fake");
+  assert.ok(kept.score >= Math.min(official.score, 52));
 });

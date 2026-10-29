@@ -23,7 +23,7 @@
 
     <section id="intro" class="intro" hidden>
       <strong>Первый запуск</strong>
-      <p>Карточка появляется на ссылке. Сайты из банка российских источников отмечаются как хорошие, остальные — нет. Алиса подключается своим ключом.</p>
+      <p>Карточка появляется на ссылке. Сайты из банка российских источников отмечаются как хорошие. Модель запоминает свои оценки и ваши поправки. Алиса подключается своим ключом.</p>
       <div class="intro-actions">
         <button id="intro-open" type="button">Открыть инструкцию</button>
         <button id="intro-done" type="button">Уже понятно</button>
@@ -102,6 +102,7 @@
       <div class="checks">
         <label><input id="newsOnly" type="checkbox" checked> Только похожие на материал ссылки</label>
         <label><input id="deepFetch" type="checkbox" checked> Читать текст страницы по ссылке</label>
+        <label><input id="learn" type="checkbox" checked> Запоминать оценки и поправки</label>
       </div>
 
       <label class="delay">
@@ -110,9 +111,17 @@
       </label>
 
       <button id="test" type="button">Проверить модель</button>
-      <p id="status" role="status">Ключ Алисы, Gemini или OpenAI остаётся в браузере и уходит только выбранному провайдеру. В модель уходят адрес, текст ссылки, заголовок, описание и фрагмент статьи.</p>
+      <p id="status" role="status">Ключ и память модели остаются в браузере. В облако уходят адрес, текст ссылки, заголовок, описание, фрагмент статьи и короткие прошлые поправки.</p>
       <button id="guide" type="button">Инструкция</button>
     </form>
+
+    <section>
+      <h2>Память модели</h2>
+      <ul id="memory">
+        <li class="empty">Пока пусто. Оценки появятся после проверок.</li>
+      </ul>
+      <button id="forget" type="button">Очистить память</button>
+    </section>
 
     <section>
       <h2>Недавние</h2>

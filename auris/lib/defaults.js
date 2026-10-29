@@ -4,6 +4,7 @@ export const DEFAULT_SETTINGS = {
   newsOnly: true,
   deepFetch: true,
   aiMode: "auto",
+  learn: true,
 };
 
 export const DEFAULT_SECRET = {
