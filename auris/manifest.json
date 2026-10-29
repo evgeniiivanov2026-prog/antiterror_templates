@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "AURIS — оценка новостей",
+  "short_name": "AURIS",
+  "version": "1.0.0",
+  "description": "При наведении на ссылку показывает, похожа ли новость на фейк. Локальные сигналы, Gemini Nano и облачный ИИ.",
+  "minimum_chrome_version": "120",
+  "permissions": ["storage"],
+  "host_permissions": ["https://*/*", "http://*/*"],
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "AURIS — оценка новостей",
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "assets/icons/icon16.png",
+      "32": "assets/icons/icon32.png",
+      "48": "assets/icons/icon48.png"
+    }
+  },
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "32": "assets/icons/icon32.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content/bundle.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["ui/card.css", "ui/fonts.css", "assets/fonts/*"],
+      "matches": ["http://*/*", "https://*/*"]
+    }
+  ]
+}

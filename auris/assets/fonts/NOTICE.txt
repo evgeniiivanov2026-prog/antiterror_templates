@@ -1,0 +1,6 @@
+Шрифты распространяются по лицензии SIL Open Font License 1.1.
+Тексты лицензий лежат рядом: manrope-OFL.txt, unbounded-OFL.txt, jetbrains-OFL.txt.
+
+Manrope — Mikhail Sharanda.
+Unbounded — авторы набора Google Fonts.
+JetBrains Mono — JetBrains.

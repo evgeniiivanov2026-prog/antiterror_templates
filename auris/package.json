@@ -1,0 +1,6 @@
+{
+  "name": "auris",
+  "private": true,
+  "type": "module",
+  "description": "Расширение Chrome: оценка достоверности новости при наведении на ссылку."
+}
