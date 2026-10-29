@@ -37,6 +37,9 @@ export function createLens(doc = document, options = {}) {
     domain: panel.querySelector("[data-domain]"),
     confidence: panel.querySelector("[data-confidence]"),
     title: panel.querySelector("[data-title]"),
+    excerpt: panel.querySelector("[data-excerpt]"),
+    excerptText: panel.querySelector("[data-excerpt-text]"),
+    lang: panel.querySelector("[data-lang]"),
     arc: panel.querySelector("[data-arc]"),
     fold: panel.querySelector("[data-fold]"),
     reasons: panel.querySelector("[data-reasons]"),
@@ -66,11 +69,7 @@ export function createLens(doc = document, options = {}) {
   els.pin.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
-    pinned = !pinned;
-    els.pin.textContent = pinned ? "Открепить" : "Закрепить";
-    els.pin.classList.toggle("is-on", pinned);
-    els.frame.classList.toggle("is-pinned", pinned);
-    pinListener(pinned);
+    setPinned(!pinned);
   });
 
   function render(view) {
@@ -87,6 +86,10 @@ export function createLens(doc = document, options = {}) {
       : `уверенность ${Math.round(view.confidence * 100)}%`;
     els.title.hidden = !view.title;
     els.title.textContent = view.title || "";
+    els.excerpt.hidden = !view.textExcerpt;
+    els.excerptText.textContent = view.textExcerpt || "";
+    els.lang.hidden = !view.languageNote;
+    els.lang.textContent = view.languageNote || "";
     paintReasons(doc, els.reasons, view.reasons || []);
     const score = loading ? 18 : Math.round(view.score ?? 0);
     els.score.textContent = String(score);
@@ -104,15 +107,21 @@ export function createLens(doc = document, options = {}) {
     }
   }
 
+  function setPinned(next) {
+    pinned = Boolean(next);
+    els.pin.textContent = pinned ? "Открепить" : "Закрепить";
+    els.pin.classList.toggle("is-on", pinned);
+    els.frame.classList.toggle("is-pinned", pinned);
+    pinListener(pinned);
+  }
+
   return {
     host,
     render,
     resetPin() {
-      pinned = false;
-      els.pin.textContent = "Закрепить";
-      els.pin.classList.remove("is-on");
-      els.frame.classList.remove("is-pinned");
+      setPinned(false);
     },
+    setPinned,
     get pinned() {
       return pinned;
     },
@@ -173,6 +182,11 @@ function buildPanel(doc) {
       </div>
     </div>
     <cite class="title-line" data-title hidden></cite>
+    <div class="excerpt" data-excerpt hidden>
+      <b>Фрагмент текста</b>
+      <p data-excerpt-text></p>
+      <div class="lang-note" data-lang hidden></div>
+    </div>
     <ul class="meters">
       <li><span>Источник</span><b><i data-meter="source"></i></b></li>
       <li><span>Подача</span><b><i data-meter="rhetoric"></i></b></li>

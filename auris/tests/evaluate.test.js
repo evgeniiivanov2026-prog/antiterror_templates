@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { extractArticleFromHtml } from "../lib/article.js";
 import { BRANDS, lookupSource } from "../lib/sources.js";
 import { applyMeta, evaluateLink, shouldInspect } from "../lib/evaluate.js";
 import { extractMeta } from "../lib/meta.js";
 import { fuse, parseModelJson } from "../lib/model.js";
 import { buildUserPrompt } from "../lib/prompt.js";
+import { applyText, assessPlain, detectLanguage } from "../lib/text.js";
 
 test("reuters looks reliable", () => {
   const result = evaluateLink({
@@ -198,5 +200,97 @@ test("meta extractor reads open graph tags", () => {
   `);
   assert.equal(meta.title, "Шторм & порт");
   assert.equal(meta.description, "Короткое описание");
-  assert.match(buildUserPrompt({ href: "https://example.com", domain: "example.com", score: 50, verdict: "insufficient" }), /example\.com/);
+  assert.match(buildUserPrompt({ href: "https://example.com", domain: "example.com", score: 50, verdict: "insufficient", body: "Фрагмент бюджета" }), /Фрагмент бюджета/);
+});
+
+const shock = "ШОК Врачи скрывают это от вас!!! Эксперты считают, что вам не расскажут правду. Поделитесь срочно. ".repeat(12);
+const calm = "По данным городской администрации, 12 марта 2026 года совет утвердил бюджет. «Мы сохранили расходы на школы», — заявил мэр журналистам. ".repeat(8);
+
+test("article extractor keeps the story and drops chrome", () => {
+  const text = extractArticleFromHtml(`
+    <html><body>
+      <nav>ШОК меню сенсация</nav>
+      <article><p>По данным администрации, бюджет утверждён.</p></article>
+      <script>шок врачи скрывают</script>
+    </body></html>
+  `);
+  assert.match(text, /бюджет утверждён/);
+  assert.doesNotMatch(text, /меню/);
+  assert.doesNotMatch(text, /скрывают/);
+});
+
+test("language is a label, not a gate", () => {
+  assert.equal(detectLanguage(calm), "ru");
+  assert.equal(detectLanguage("According to the port authority, the council approved the budget on March 12, 2026, and the mayor told reporters the full quote."), "en");
+  assert.match(applyText(evaluateLink({
+    href: "https://example.com/news/city-council-approves-the-annual-budget-plan",
+    anchorText: "City council approves the annual budget",
+  }), calm, { mode: "page" }).languageNote, /русском/);
+});
+
+test("a clickbait body lowers an unknown page without a short snippet becoming fake", () => {
+  const local = evaluateLink({
+    href: "https://example.com/news/city-council-approves-the-annual-budget-plan",
+    anchorText: "City council approves the annual budget",
+  });
+  const thin = applyText(local, "Коротко.", { mode: "hover" });
+  assert.equal(thin.verdict, local.verdict);
+  assert.notEqual(thin.verdict, "likely_fake");
+
+  const page = applyText(local, "Только заголовок", { mode: "page" });
+  assert.equal(page.verdict, "insufficient");
+  assert.match(page.summary, /не статья/);
+
+  const body = applyText(local, shock, { mode: "hover" });
+  assert.ok(body.score < local.score);
+  assert.equal(body.verdict, "suspicious");
+  assert.match(body.textExcerpt, /ШОК/);
+});
+
+test("attribution raises the score and a wire service is not flipped to fake", () => {
+  const local = evaluateLink({
+    href: "https://example.com/news/city-council-approves-the-annual-budget-plan",
+    anchorText: "City council approves the annual budget",
+  });
+  const sourced = applyText(local, calm, { mode: "page" });
+  assert.ok(sourced.score > local.score);
+  assert.notEqual(sourced.verdict, "likely_fake");
+
+  const reuters = evaluateLink({
+    href: "https://www.reuters.com/world/example",
+    anchorText: "Cargo ships reroute",
+  });
+  const pulled = applyText(reuters, shock, { mode: "hover" });
+  assert.ok(pulled.score < reuters.score);
+  assert.ok(pulled.score >= 52);
+  assert.equal(pulled.verdict === "likely_fake" || pulled.verdict === "suspicious", false);
+});
+
+test("article text cannot rehabilitate a lookalike or rewrite satire", () => {
+  const look = evaluateLink({
+    href: "https://reuters.xyz/breaking-news",
+    anchorText: "Reuters breaking news",
+  });
+  const nicer = applyText(look, calm, { mode: "page" });
+  assert.ok(nicer.score <= look.score);
+  assert.equal(nicer.verdict, "likely_fake");
+
+  const onion = evaluateLink({
+    href: "https://www.theonion.com/story",
+    anchorText: "Nation Announces It Did The Thing",
+  });
+  assert.equal(applyText(onion, shock, { mode: "page" }).verdict, "satire");
+});
+
+test("pasted text is judged without a domain", () => {
+  const result = assessPlain(shock, { mode: "paste" });
+  assert.equal(result.domain, "");
+  assert.match(result.reasons.join(" "), /домена/);
+  assert.equal(result.verdict === "likely_fake" || result.verdict === "suspicious", true);
+  assert.equal(result.language, "ru");
+
+  const sourced = assessPlain(calm, { mode: "paste" });
+  assert.equal(sourced.verdict, "mixed");
+  assert.doesNotMatch(sourced.summary, /известной редакции/);
+  assert.match(sourced.summary, /не фейк/);
 });

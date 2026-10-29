@@ -253,6 +253,34 @@ export function analyzeRhetoric(text) {
   };
 }
 
+export function settle(result, patch = {}) {
+  const flags = patch.flags || result.flags;
+  const score = clamp(Math.round(patch.score ?? result.score), 3, 96);
+  const source = result.source || null;
+  const verdict = patch.verdict || decideVerdict({ score, source, flags });
+  const reasons = (patch.reasons || result.reasons || []).slice(0, 6);
+  const rhetoricPenalty = patch.rhetoricPenalty ?? result.rhetoricPenalty ?? 0;
+  const rest = { ...patch };
+  delete rest.score;
+  delete rest.flags;
+  delete rest.verdict;
+  delete rest.reasons;
+  delete rest.rhetoricPenalty;
+  delete rest.summary;
+  delete rest.confidence;
+  return {
+    ...result,
+    ...rest,
+    score,
+    flags,
+    verdict,
+    reasons,
+    rhetoricPenalty,
+    summary: patch.summary || summaryFor({ verdict, source, flags }),
+    confidence: patch.confidence ?? decideConfidence({ source, flags, rhetoric: { penalty: rhetoricPenalty } }),
+  };
+}
+
 function summaryFor({ verdict, source, flags }) {
   if (flags.impersonation) {
     return "Адрес подражает известному изданию. Такой приём часто используют поддельные страницы.";
@@ -266,6 +294,12 @@ function summaryFor({ verdict, source, flags }) {
   if (source?.tier === "low" && (verdict === "likely_fake" || verdict === "suspicious")) {
     return `${source.name} многократно отмечался фактчекерами за выдуманные или вводящие в заблуждение материалы.`;
   }
+  if (!source && verdict === "mixed" && !flags.harsh) {
+    return "Текст выглядит собраннее кликбейта, но домена нет в базе репутации. Это не подтверждение и не фейк.";
+  }
+  if (!source && (verdict === "leaning" || verdict === "reliable")) {
+    return "По адресу не видно известной редакции. Высокий индекс сам по себе материал не подтверждает.";
+  }
   return VERDICT_SUMMARY[verdict];
 }
 
@@ -275,7 +309,7 @@ function decideVerdict({ score, source, flags }) {
   if (flags.impersonation) return score < 42 ? "likely_fake" : "suspicious";
   if (source?.tier === "low") return score < 55 ? "likely_fake" : "suspicious";
   if (source?.tier === "state") return score < 40 ? "suspicious" : "mixed";
-  if (!source && !flags.harsh) return score >= 64 ? "leaning" : "insufficient";
+  if (!source && !flags.harsh) return score >= 64 ? "mixed" : "insufficient";
   if (score < 34) return "likely_fake";
   if (score < 48) return "suspicious";
   if (score < 64) return "mixed";

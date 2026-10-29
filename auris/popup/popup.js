@@ -1,5 +1,7 @@
 import { VERDICT_LABEL } from "../lib/copy.js";
 import { DEFAULT_SECRET, DEFAULT_SETTINGS, HISTORY_KEY, SECRET_KEY, SETTINGS_KEY } from "../lib/defaults.js";
+import { present } from "../lib/present.js";
+import { assessPlain } from "../lib/text.js";
 
 const $ = (id) => document.getElementById(id);
 const hasChrome = Boolean(globalThis.chrome?.storage?.local && globalThis.chrome?.runtime?.id);
@@ -21,6 +23,8 @@ for (const id of [...fields, ...secretFields]) {
   }
 }
 $("test").addEventListener("click", testModel);
+$("check-tab").addEventListener("click", checkTab);
+$("check-text").addEventListener("click", checkText);
 
 function boot() {
   chrome.storage.local.get([SETTINGS_KEY, SECRET_KEY, HISTORY_KEY], (data) => {
@@ -78,6 +82,64 @@ function save() {
     [SETTINGS_KEY]: settings,
     [SECRET_KEY]: secret,
   });
+}
+
+function checkTab() {
+  if (!hasChrome) return;
+  $("check-tab").disabled = true;
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    const tab = tabs?.[0];
+    if (!tab?.id || !/^https?:/i.test(tab.url || "")) {
+      $("check-tab").disabled = false;
+      $("status").textContent = "Откройте обычную http-страницу: на системных вкладках AURIS не запускается.";
+      return;
+    }
+    chrome.tabs.sendMessage(tab.id, { type: "auris:check", mode: "page" }, () => {
+      $("check-tab").disabled = false;
+      if (chrome.runtime.lastError) {
+        $("status").textContent = "На этой вкладке AURIS ещё не запущен. Обновите страницу и повторите.";
+        return;
+      }
+      window.close();
+    });
+  });
+}
+
+function checkText() {
+  const text = $("paste").value.trim();
+  if (text.length < 40) {
+    $("status").textContent = "Вставьте хотя бы несколько предложений.";
+    return;
+  }
+  paintCheck(assessPlain(text, { mode: "paste" }));
+  if (!hasChrome) {
+    $("status").textContent = "Показана локальная оценка текста.";
+    return;
+  }
+  $("check-text").disabled = true;
+  $("status").textContent = "Уточняю по тексту…";
+  chrome.runtime.sendMessage({ type: "auris:assess", mode: "paste", text }, (response) => {
+    $("check-text").disabled = false;
+    if (chrome.runtime.lastError || !response?.ok) {
+      $("status").textContent = "Показана локальная оценка текста.";
+      return;
+    }
+    paintCheck(response.result);
+    $("status").textContent = "Оценка по вставленному тексту.";
+  });
+}
+
+function paintCheck(result) {
+  const view = present(result);
+  const box = $("check-result");
+  box.hidden = false;
+  box.className = view.verdict;
+  box.querySelector("[data-score]").textContent = String(view.score);
+  box.querySelector("[data-label]").textContent = view.verdictLabel;
+  box.querySelector("[data-summary]").textContent = view.summary;
+  const excerpt = box.querySelector("[data-excerpt]");
+  excerpt.hidden = !view.textExcerpt;
+  excerpt.textContent = view.textExcerpt || "";
 }
 
 function testModel() {

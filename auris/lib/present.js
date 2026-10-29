@@ -20,5 +20,7 @@ export function present(result, extra = {}) {
     domain: result?.domain || "",
     href: result?.href || "",
     title: result?.title || "",
+    textExcerpt: result?.textExcerpt || "",
+    languageNote: result?.languageNote || "",
   };
 }

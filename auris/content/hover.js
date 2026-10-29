@@ -21,6 +21,7 @@ export function attachHover(env) {
 
   env.document.addEventListener("mouseover", (event) => {
     if (!env.getSettings().enabled) return;
+    if (String(win.getSelection?.() || "").trim().length > 40) return;
     if (event.target === lens.host) {
       win.clearTimeout(closeTimer);
       return;
@@ -125,5 +126,88 @@ export function attachHover(env) {
     lens.host.style.top = `${Math.round(top)}px`;
   }
 
-  return { hide };
+  async function showCheck({ mode = "page", text = "", href = "", title = "", point = null } = {}) {
+    if (!env.getSettings().enabled) return;
+    win.clearTimeout(openTimer);
+    win.clearTimeout(closeTimer);
+    token += 1;
+    const myToken = token;
+    anchor = null;
+    lens.setPinned(true);
+
+    const settings = env.getSettings();
+    const local = env.evaluate({ href, anchorText: String(title || "").slice(0, 400) });
+    const viewed = typeof env.applyText === "function" ? env.applyText(local, text, { mode }) : local;
+    const length = String(text || "").trim().length;
+    const pending = settings.aiMode !== "local" && length >= (mode === "page" ? 200 : 80);
+    lens.render(env.present(viewed, { pending }));
+    revealAt(point);
+    if (!pending) return;
+
+    const enriched = await env.requestEnrich({
+      href,
+      anchorText: String(title || "").slice(0, 400),
+      title: title || "",
+      text: String(text || "").slice(0, 8000),
+      mode,
+    });
+    if (myToken !== token || !enriched) {
+      if (myToken === token) lens.render(env.present(viewed, { pending: false }));
+      return;
+    }
+    lens.render(env.present(enriched, { pending: false }));
+  }
+
+  function considerSelection() {
+    if (!env.getSettings().enabled) return;
+    const sel = win.getSelection?.();
+    if (!sel || sel.isCollapsed || !sel.rangeCount) return;
+    const text = String(sel).replace(/\s+/g, " ").trim();
+    if (text.length < 160) return;
+    if (inside(sel.anchorNode) || inside(sel.focusNode)) return;
+    const parent = sel.anchorNode?.nodeType === 1 ? sel.anchorNode : sel.anchorNode?.parentElement;
+    if (parent?.closest?.("input, textarea, select, [contenteditable='true']")) return;
+    const rect = sel.getRangeAt(0).getBoundingClientRect();
+    if (!rect || (rect.width === 0 && rect.height === 0)) return;
+    showCheck({
+      mode: "selection",
+      text,
+      href: win.location.href,
+      title: env.document.title || "",
+      point: { x: rect.left, y: rect.bottom },
+    });
+  }
+
+  function revealAt(point) {
+    lens.host.style.visibility = "hidden";
+    lens.host.style.display = "block";
+    const card = lens.host.getBoundingClientRect();
+    const corner = !point;
+    let left = corner ? win.innerWidth - card.width - 16 : point.x;
+    let top = corner ? 16 : point.y + 12;
+    if (!corner && top + card.height > win.innerHeight - 8) top = point.y - card.height - 12;
+    if (top + card.height > win.innerHeight - 8) top = Math.max(8, win.innerHeight - card.height - 8);
+    if (top < 8) top = 8;
+    if (left + card.width > win.innerWidth - 8) left = win.innerWidth - card.width - 8;
+    if (left < 8) left = 8;
+    lens.host.style.left = `${Math.round(left)}px`;
+    lens.host.style.top = `${Math.round(top)}px`;
+    lens.host.style.visibility = "visible";
+  }
+
+  function inside(node) {
+    if (!node) return false;
+    const el = node.nodeType === 1 ? node : node.parentElement;
+    if (!el) return false;
+    if (el === lens.host || lens.host.contains(el)) return true;
+    const root = el.getRootNode?.();
+    return Boolean(root && root.host === lens.host);
+  }
+
+  return {
+    hide,
+    showCheck,
+    considerSelection,
+    owns: inside,
+  };
 }

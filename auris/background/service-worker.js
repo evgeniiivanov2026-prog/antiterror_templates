@@ -1,8 +1,10 @@
 import { assessWithAI, diagnoseAI } from "./ai.js";
+import { extractArticleFromHtml } from "../lib/article.js";
 import { applyMeta, cacheKey, evaluateLink } from "../lib/evaluate.js";
 import { extractMeta } from "../lib/meta.js";
 import { fuse } from "../lib/model.js";
 import { buildUserPrompt, SYSTEM_PROMPT } from "../lib/prompt.js";
+import { applyText, assessPlain, MIN_ARTICLE_CHARS } from "../lib/text.js";
 import { DEFAULT_SECRET, DEFAULT_SETTINGS, HISTORY_KEY, SECRET_KEY, SETTINGS_KEY } from "../lib/defaults.js";
 
 const cache = new Map();
@@ -14,6 +16,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "auris:enrich") {
     enrich(message, sender).then(sendResponse).catch((error) => {
       sendResponse({ ok: false, error: error instanceof Error ? error.message : "enrich failed" });
+    });
+    return true;
+  }
+  if (message.type === "auris:assess") {
+    assess(message).then(sendResponse).catch((error) => {
+      sendResponse({ ok: false, error: error instanceof Error ? error.message : "assess failed" });
     });
     return true;
   }
@@ -29,6 +37,41 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === "local" && (changes[SETTINGS_KEY] || changes[SECRET_KEY])) cache.clear();
 });
+
+chrome.runtime.onInstalled.addListener(installMenus);
+chrome.runtime.onStartup.addListener(installMenus);
+installMenus();
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (!tab?.id) return;
+  const mode = info.menuItemId === "auris-selection" ? "selection" : "page";
+  chrome.tabs.sendMessage(tab.id, {
+    type: "auris:check",
+    mode,
+    selectionText: info.selectionText || "",
+  });
+});
+
+function installMenus() {
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({
+      id: "auris-page",
+      title: "AURIS: проверить эту страницу",
+      contexts: ["page"],
+    });
+    chrome.contextMenus.create({
+      id: "auris-selection",
+      title: "AURIS: проверить выделенное",
+      contexts: ["selection"],
+    });
+  });
+}
+
+async function assess(message) {
+  const controller = new AbortController();
+  const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]);
+  return enrichLive(message, signal, controller.signal);
+}
 
 async function enrich(message, sender) {
   const tabId = sender.tab?.id ?? 0;
@@ -50,45 +93,60 @@ async function enrich(message, sender) {
 async function enrichLive(message, signal, superseded) {
   const settings = await getSettings();
   const secret = await getSecret();
+  const mode = ["page", "selection", "paste", "hover"].includes(message.mode) ? message.mode : "hover";
   const href = String(message.href || "");
-  const anchorText = String(message.anchorText || "").slice(0, 400);
+  const anchorText = String(message.anchorText || message.title || "").slice(0, 400);
+  const givenText = String(message.text || "").slice(0, 8000);
   const key = cacheKey(href);
-  const cached = cache.get(key);
-  if (cached && Date.now() - cached.at < TTL) return { ok: true, result: cached.result, cached: true };
+  if (mode === "hover") {
+    const cached = cache.get(key);
+    if (cached && Date.now() - cached.at < TTL) return { ok: true, result: cached.result, cached: true };
+  }
   if (superseded.aborted) return { ok: false, stale: true };
 
-  let local = evaluateLink({ href, anchorText });
+  let local;
   let description = "";
-  if (settings.deepFetch) {
-    try {
-      const fetched = await fetchPreview(href, signal);
-      if (fetched.finalUrl && cacheKey(fetched.finalUrl) !== key) {
-        const redirected = evaluateLink({ href: fetched.finalUrl, anchorText });
-        redirected.reasons = [
-          `Ссылка раскрывается как ${redirected.domain}.`,
-          ...redirected.reasons,
-        ].slice(0, 6);
-        local = redirected;
+  let body = givenText;
+  if (mode === "hover") {
+    local = evaluateLink({ href, anchorText });
+    if (settings.deepFetch) {
+      try {
+        const fetched = await fetchPreview(href, signal);
+        if (fetched.finalUrl && cacheKey(fetched.finalUrl) !== key) {
+          const redirected = evaluateLink({ href: fetched.finalUrl, anchorText });
+          redirected.reasons = [
+            `Ссылка раскрывается как ${redirected.domain}.`,
+            ...redirected.reasons,
+          ].slice(0, 6);
+          local = redirected;
+        }
+        description = fetched.meta.description || "";
+        if (fetched.meta.title || fetched.meta.description) local = applyMeta(local, fetched.meta);
+        body = extractArticleFromHtml(fetched.html);
+        if (body) local = applyText(local, body, { mode: "hover" });
+      } catch (error) {
+        if (superseded.aborted) throw error;
+        local = {
+          ...local,
+          reasons: [...local.reasons, "Текст страницы прочитать не удалось — оценка по адресу и тексту ссылки."].slice(0, 6),
+        };
       }
-      description = fetched.meta.description || "";
-      if (fetched.meta.title || fetched.meta.description) local = applyMeta(local, fetched.meta);
-    } catch (error) {
-      if (superseded.aborted) throw error;
-      local = {
-        ...local,
-        reasons: [...local.reasons, "Заголовок страницы прочитать не удалось — оценка по адресу и тексту ссылки."].slice(0, 6),
-      };
     }
+  } else {
+    local = assessPlain(givenText, { href, title: anchorText, mode });
   }
 
+  const thin = mode === "page"
+    ? givenText.trim().length < MIN_ARTICLE_CHARS
+    : (mode !== "hover" && givenText.trim().length < 80);
   let result = local;
-  if (settings.aiMode !== "local") {
+  if (settings.aiMode !== "local" && !thin) {
     if (superseded.aborted) return { ok: false, stale: true };
     const ai = await assessWithAI({
       mode: settings.aiMode,
       secret,
       system: SYSTEM_PROMPT,
-      prompt: buildUserPrompt({ ...local, anchorText, description }),
+      prompt: buildUserPrompt({ ...local, anchorText, description, body }),
       signal,
     });
     if (superseded.aborted) return { ok: false, stale: true };
@@ -101,8 +159,8 @@ async function enrichLive(message, signal, superseded) {
     }
   }
 
-  cache.set(key, { at: Date.now(), result });
-  await pushHistory(result);
+  if (mode === "hover") cache.set(key, { at: Date.now(), result });
+  if (result.href) await pushHistory(result);
   return { ok: true, result };
 }
 
@@ -143,22 +201,20 @@ async function testAI() {
 async function fetchPreview(href, signal) {
   const timeout = AbortSignal.timeout(5000);
   const combined = signal ? AbortSignal.any([signal, timeout]) : timeout;
-  try {
-    const response = await fetch(href, {
-      method: "GET",
-      redirect: "follow",
-      credentials: "omit",
-      signal: combined,
-      headers: { Accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.1" },
-    });
-    const finalUrl = response.url || href;
-    const type = response.headers.get("content-type") || "";
-    if (type && !/text\/html|application\/xhtml\+xml|text\/plain/i.test(type)) {
-      return { finalUrl, meta: { title: "", description: "", siteName: "" } };
-    }
-    const html = await readLimited(response, 150_000);
-    return { finalUrl, meta: extractMeta(html) };
+  const response = await fetch(href, {
+    method: "GET",
+    redirect: "follow",
+    credentials: "omit",
+    signal: combined,
+    headers: { Accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.1" },
+  });
+  const finalUrl = response.url || href;
+  const type = response.headers.get("content-type") || "";
+  if (type && !/text\/html|application\/xhtml\+xml|text\/plain/i.test(type)) {
+    return { finalUrl, meta: { title: "", description: "", siteName: "" }, html: "" };
   }
+  const html = await readLimited(response, 150_000);
+  return { finalUrl, meta: extractMeta(html), html };
 }
 
 async function readLimited(response, limit) {

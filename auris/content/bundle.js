@@ -1,5 +1,5 @@
 (() => {
-  // ../../content/hover.js
+  // ../../workspace/auris/content/hover.js
   function attachHover(env) {
     const lens = env.createLens(env.document);
     lens.host.style.position = "fixed";
@@ -19,6 +19,7 @@
     const win = env.document.defaultView;
     env.document.addEventListener("mouseover", (event) => {
       if (!env.getSettings().enabled) return;
+      if (String(win.getSelection?.() || "").trim().length > 40) return;
       if (event.target === lens.host) {
         win.clearTimeout(closeTimer);
         return;
@@ -109,11 +110,114 @@
       lens.host.style.left = `${Math.round(left)}px`;
       lens.host.style.top = `${Math.round(top)}px`;
     }
-    return { hide };
+    async function showCheck({ mode = "page", text = "", href = "", title = "", point = null } = {}) {
+      if (!env.getSettings().enabled) return;
+      win.clearTimeout(openTimer);
+      win.clearTimeout(closeTimer);
+      token += 1;
+      const myToken = token;
+      anchor = null;
+      lens.setPinned(true);
+      const settings = env.getSettings();
+      const local = env.evaluate({ href, anchorText: String(title || "").slice(0, 400) });
+      const viewed = typeof env.applyText === "function" ? env.applyText(local, text, { mode }) : local;
+      const length = String(text || "").trim().length;
+      const pending = settings.aiMode !== "local" && length >= (mode === "page" ? 200 : 80);
+      lens.render(env.present(viewed, { pending }));
+      revealAt(point);
+      if (!pending) return;
+      const enriched = await env.requestEnrich({
+        href,
+        anchorText: String(title || "").slice(0, 400),
+        title: title || "",
+        text: String(text || "").slice(0, 8e3),
+        mode
+      });
+      if (myToken !== token || !enriched) {
+        if (myToken === token) lens.render(env.present(viewed, { pending: false }));
+        return;
+      }
+      lens.render(env.present(enriched, { pending: false }));
+    }
+    function considerSelection() {
+      if (!env.getSettings().enabled) return;
+      const sel = win.getSelection?.();
+      if (!sel || sel.isCollapsed || !sel.rangeCount) return;
+      const text = String(sel).replace(/\s+/g, " ").trim();
+      if (text.length < 160) return;
+      if (inside(sel.anchorNode) || inside(sel.focusNode)) return;
+      const parent = sel.anchorNode?.nodeType === 1 ? sel.anchorNode : sel.anchorNode?.parentElement;
+      if (parent?.closest?.("input, textarea, select, [contenteditable='true']")) return;
+      const rect = sel.getRangeAt(0).getBoundingClientRect();
+      if (!rect || rect.width === 0 && rect.height === 0) return;
+      showCheck({
+        mode: "selection",
+        text,
+        href: win.location.href,
+        title: env.document.title || "",
+        point: { x: rect.left, y: rect.bottom }
+      });
+    }
+    function revealAt(point) {
+      lens.host.style.visibility = "hidden";
+      lens.host.style.display = "block";
+      const card = lens.host.getBoundingClientRect();
+      const corner = !point;
+      let left = corner ? win.innerWidth - card.width - 16 : point.x;
+      let top = corner ? 16 : point.y + 12;
+      if (!corner && top + card.height > win.innerHeight - 8) top = point.y - card.height - 12;
+      if (top + card.height > win.innerHeight - 8) top = Math.max(8, win.innerHeight - card.height - 8);
+      if (top < 8) top = 8;
+      if (left + card.width > win.innerWidth - 8) left = win.innerWidth - card.width - 8;
+      if (left < 8) left = 8;
+      lens.host.style.left = `${Math.round(left)}px`;
+      lens.host.style.top = `${Math.round(top)}px`;
+      lens.host.style.visibility = "visible";
+    }
+    function inside(node) {
+      if (!node) return false;
+      const el = node.nodeType === 1 ? node : node.parentElement;
+      if (!el) return false;
+      if (el === lens.host || lens.host.contains(el)) return true;
+      const root = el.getRootNode?.();
+      return Boolean(root && root.host === lens.host);
+    }
+    return {
+      hide,
+      showCheck,
+      considerSelection,
+      owns: inside
+    };
   }
 
-  // ../../ui/card.js
-  var import_meta = {};
+  // ../../workspace/auris/lib/article.js
+  function extractArticleFromDocument(doc) {
+    if (!doc?.body || typeof doc.createTreeWalker !== "function") return "";
+    const article = textOf(doc, doc.querySelector("article"));
+    if (article.length >= 200) return article.slice(0, 8e3);
+    const main = textOf(doc, doc.querySelector("main") || doc.querySelector("[role='main']"));
+    if (main.length >= 200) return main.slice(0, 8e3);
+    const body = textOf(doc, doc.body);
+    const best = [article, main, body].sort((a, b) => b.length - a.length)[0] || "";
+    return best.slice(0, 8e3);
+  }
+  function textOf(doc, root) {
+    if (!root) return "";
+    const chunks = [];
+    const walker = doc.createTreeWalker(root, 4, {
+      acceptNode(node) {
+        const parent = node.parentElement;
+        if (!parent?.closest) return 2;
+        if (parent.closest("script,style,noscript,svg,iframe,nav,footer,form,aside")) return 2;
+        return node.nodeValue && node.nodeValue.trim() ? 1 : 2;
+      }
+    });
+    while (walker.nextNode()) chunks.push(walker.currentNode.nodeValue);
+    return chunks.join(" ").replace(/\s+/g, " ").trim();
+  }
+
+  // ../../workspace/auris/ui/card.js
+  var import_meta2 = {};
   var RADIUS = 46;
   var CIRC = 2 * Math.PI * RADIUS;
   if (typeof CSS !== "undefined" && CSS.registerProperty) {
@@ -132,7 +236,7 @@
     const shadow = host.attachShadow({ mode: "open" });
     const link = doc.createElement("link");
     link.rel = "stylesheet";
-    link.href = options.cssHref || new URL("./card.css", import_meta.url).href;
+    link.href = options.cssHref || new URL("./card.css", import_meta2.url).href;
     const frame = doc.createElement("div");
     frame.className = "frame";
     frame.append(buildPanel(doc));
@@ -148,6 +252,9 @@
       domain: panel.querySelector("[data-domain]"),
       confidence: panel.querySelector("[data-confidence]"),
       title: panel.querySelector("[data-title]"),
+      excerpt: panel.querySelector("[data-excerpt]"),
+      excerptText: panel.querySelector("[data-excerpt-text]"),
+      lang: panel.querySelector("[data-lang]"),
       arc: panel.querySelector("[data-arc]"),
       fold: panel.querySelector("[data-fold]"),
       reasons: panel.querySelector("[data-reasons]"),
@@ -174,11 +281,7 @@
     els.pin.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      pinned = !pinned;
-      els.pin.textContent = pinned ? "\u041E\u0442\u043A\u0440\u0435\u043F\u0438\u0442\u044C" : "\u0417\u0430\u043A\u0440\u0435\u043F\u0438\u0442\u044C";
-      els.pin.classList.toggle("is-on", pinned);
-      els.frame.classList.toggle("is-pinned", pinned);
-      pinListener(pinned);
+      setPinned(!pinned);
     });
     function render(view) {
       const loading = view.phase === "loading";
@@ -192,6 +295,10 @@
       els.confidence.textContent = loading || !view.confidence ? "" : `\u0443\u0432\u0435\u0440\u0435\u043D\u043D\u043E\u0441\u0442\u044C ${Math.round(view.confidence * 100)}%`;
       els.title.hidden = !view.title;
       els.title.textContent = view.title || "";
+      els.excerpt.hidden = !view.textExcerpt;
+      els.excerptText.textContent = view.textExcerpt || "";
+      els.lang.hidden = !view.languageNote;
+      els.lang.textContent = view.languageNote || "";
       paintReasons(doc, els.reasons, view.reasons || []);
       const score = loading ? 18 : Math.round(view.score ?? 0);
       els.score.textContent = String(score);
@@ -208,15 +315,20 @@
         els.meters[key].style.width = `${value}%`;
       }
     }
+    function setPinned(next) {
+      pinned = Boolean(next);
+      els.pin.textContent = pinned ? "\u041E\u0442\u043A\u0440\u0435\u043F\u0438\u0442\u044C" : "\u0417\u0430\u043A\u0440\u0435\u043F\u0438\u0442\u044C";
+      els.pin.classList.toggle("is-on", pinned);
+      els.frame.classList.toggle("is-pinned", pinned);
+      pinListener(pinned);
+    }
     return {
       host,
       render,
       resetPin() {
-        pinned = false;
-        els.pin.textContent = "\u0417\u0430\u043A\u0440\u0435\u043F\u0438\u0442\u044C";
-        els.pin.classList.remove("is-on");
-        els.frame.classList.remove("is-pinned");
+        setPinned(false);
       },
+      setPinned,
       get pinned() {
         return pinned;
       },
@@ -275,6 +387,11 @@
       </div>
     </div>
     <cite class="title-line" data-title hidden></cite>
+    <div class="excerpt" data-excerpt hidden>
+      <b>\u0424\u0440\u0430\u0433\u043C\u0435\u043D\u0442 \u0442\u0435\u043A\u0441\u0442\u0430</b>
+      <p data-excerpt-text></p>
+      <div class="lang-note" data-lang hidden></div>
+    </div>
     <ul class="meters">
       <li><span>\u0418\u0441\u0442\u043E\u0447\u043D\u0438\u043A</span><b><i data-meter="source"></i></b></li>
       <li><span>\u041F\u043E\u0434\u0430\u0447\u0430</span><b><i data-meter="rhetoric"></i></b></li>
@@ -296,12 +413,12 @@
     return panel;
   }
 
-  // ../../lib/clamp.js
+  // ../../workspace/auris/lib/clamp.js
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
   }
 
-  // ../../lib/copy.js
+  // ../../workspace/auris/lib/copy.js
   var VERDICT_LABEL = {
     reliable: "\u0414\u043E\u0441\u0442\u043E\u0432\u0435\u0440\u043D\u043E",
     leaning: "\u0421\u043A\u043E\u0440\u0435\u0435 \u0434\u0430",
@@ -327,7 +444,7 @@
   };
   var VERDICTS = new Set(Object.keys(VERDICT_LABEL));
 
-  // ../../lib/sources.js
+  // ../../workspace/auris/lib/sources.js
   var SOURCES = {
     "reuters.com": { tier: "high", name: "Reuters" },
     "apnews.com": { tier: "high", name: "Associated Press" },
@@ -479,7 +596,7 @@
     return null;
   }
 
-  // ../../lib/evaluate.js
+  // ../../workspace/auris/lib/evaluate.js
   var FILE_RE = /\.(pdf|zip|rar|7z|png|jpe?g|gif|webp|svg|mp4|mp3|wav|docx?|xlsx?|pptx?|apk|dmg)($|\?)/i;
   var RHETORIC_RULES = [
     {
@@ -668,6 +785,33 @@
       notes: notes.slice(0, 2)
     };
   }
+  function settle(result, patch = {}) {
+    const flags = patch.flags || result.flags;
+    const score = clamp(Math.round(patch.score ?? result.score), 3, 96);
+    const source = result.source || null;
+    const verdict = patch.verdict || decideVerdict({ score, source, flags });
+    const reasons = (patch.reasons || result.reasons || []).slice(0, 6);
+    const rhetoricPenalty = patch.rhetoricPenalty ?? result.rhetoricPenalty ?? 0;
+    const rest = { ...patch };
+    delete rest.score;
+    delete rest.flags;
+    delete rest.verdict;
+    delete rest.reasons;
+    delete rest.rhetoricPenalty;
+    delete rest.summary;
+    delete rest.confidence;
+    return {
+      ...result,
+      ...rest,
+      score,
+      flags,
+      verdict,
+      reasons,
+      rhetoricPenalty,
+      summary: patch.summary || summaryFor({ verdict, source, flags }),
+      confidence: patch.confidence ?? decideConfidence({ source, flags, rhetoric: { penalty: rhetoricPenalty } })
+    };
+  }
   function summaryFor({ verdict, source, flags }) {
     if (flags.impersonation) {
       return "\u0410\u0434\u0440\u0435\u0441 \u043F\u043E\u0434\u0440\u0430\u0436\u0430\u0435\u0442 \u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E\u043C\u0443 \u0438\u0437\u0434\u0430\u043D\u0438\u044E. \u0422\u0430\u043A\u043E\u0439 \u043F\u0440\u0438\u0451\u043C \u0447\u0430\u0441\u0442\u043E \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u044E\u0442 \u043F\u043E\u0434\u0434\u0435\u043B\u044C\u043D\u044B\u0435 \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u044B.";
@@ -681,6 +825,12 @@
     if (source?.tier === "low" && (verdict === "likely_fake" || verdict === "suspicious")) {
       return `${source.name} \u043C\u043D\u043E\u0433\u043E\u043A\u0440\u0430\u0442\u043D\u043E \u043E\u0442\u043C\u0435\u0447\u0430\u043B\u0441\u044F \u0444\u0430\u043A\u0442\u0447\u0435\u043A\u0435\u0440\u0430\u043C\u0438 \u0437\u0430 \u0432\u044B\u0434\u0443\u043C\u0430\u043D\u043D\u044B\u0435 \u0438\u043B\u0438 \u0432\u0432\u043E\u0434\u044F\u0449\u0438\u0435 \u0432 \u0437\u0430\u0431\u043B\u0443\u0436\u0434\u0435\u043D\u0438\u0435 \u043C\u0430\u0442\u0435\u0440\u0438\u0430\u043B\u044B.`;
     }
+    if (!source && verdict === "mixed" && !flags.harsh) {
+      return "\u0422\u0435\u043A\u0441\u0442 \u0432\u044B\u0433\u043B\u044F\u0434\u0438\u0442 \u0441\u043E\u0431\u0440\u0430\u043D\u043D\u0435\u0435 \u043A\u043B\u0438\u043A\u0431\u0435\u0439\u0442\u0430, \u043D\u043E \u0434\u043E\u043C\u0435\u043D\u0430 \u043D\u0435\u0442 \u0432 \u0431\u0430\u0437\u0435 \u0440\u0435\u043F\u0443\u0442\u0430\u0446\u0438\u0438. \u042D\u0442\u043E \u043D\u0435 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u0435 \u0438 \u043D\u0435 \u0444\u0435\u0439\u043A.";
+    }
+    if (!source && (verdict === "leaning" || verdict === "reliable")) {
+      return "\u041F\u043E \u0430\u0434\u0440\u0435\u0441\u0443 \u043D\u0435 \u0432\u0438\u0434\u043D\u043E \u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E\u0439 \u0440\u0435\u0434\u0430\u043A\u0446\u0438\u0438. \u0412\u044B\u0441\u043E\u043A\u0438\u0439 \u0438\u043D\u0434\u0435\u043A\u0441 \u0441\u0430\u043C \u043F\u043E \u0441\u0435\u0431\u0435 \u043C\u0430\u0442\u0435\u0440\u0438\u0430\u043B \u043D\u0435 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0430\u0435\u0442.";
+    }
     return VERDICT_SUMMARY[verdict];
   }
   function decideVerdict({ score, source, flags }) {
@@ -689,7 +839,7 @@
     if (flags.impersonation) return score < 42 ? "likely_fake" : "suspicious";
     if (source?.tier === "low") return score < 55 ? "likely_fake" : "suspicious";
     if (source?.tier === "state") return score < 40 ? "suspicious" : "mixed";
-    if (!source && !flags.harsh) return score >= 64 ? "leaning" : "insufficient";
+    if (!source && !flags.harsh) return score >= 64 ? "mixed" : "insufficient";
     if (score < 34) return "likely_fake";
     if (score < 48) return "suspicious";
     if (score < 64) return "mixed";
@@ -786,7 +936,7 @@
     }
   }
 
-  // ../../lib/present.js
+  // ../../workspace/auris/lib/present.js
   function present(result, extra = {}) {
     const verdict = result?.verdict || "insufficient";
     const engine = result?.engine || "local";
@@ -804,11 +954,169 @@
       reasons: Array.isArray(result?.reasons) ? result.reasons : [],
       domain: result?.domain || "",
       href: result?.href || "",
-      title: result?.title || ""
+      title: result?.title || "",
+      textExcerpt: result?.textExcerpt || "",
+      languageNote: result?.languageNote || ""
     };
   }
 
-  // ../../lib/defaults.js
+  // ../../workspace/auris/lib/text.js
+  var MIN_ARTICLE_CHARS = 200;
+  var ATTRIBUTION = /по данным|сообщ(?:ил[аи]?|ает)|заявил[аи]?|according to|said that|told reporters|агентство|цитирует/i;
+  var QUOTE = /[«"][^»"]{12,}[»"]/;
+  var DATE = /\b(19|20)\d{2}\b|\d{1,2}\s+(января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря|january|february|march|april|may|june|july|august|september|october|november|december)/i;
+  var ANON = /эксперты считают|учёные доказали|ученые доказали|источники сообщают|scientists say|experts agree/i;
+  var SHARE = /поделитесь|репостните|перешлите друзьям|share this|tag a friend/i;
+  var FIRST = /я лично|мне рассказали|я сам видел|i personally|my friend told me/i;
+  var SHORT_PAGE = "\u041F\u043E\u0445\u043E\u0436\u0435, \u044D\u0442\u043E \u043D\u0435 \u0441\u0442\u0430\u0442\u044C\u044F: \u0442\u0435\u043A\u0441\u0442\u0430 \u0441\u043B\u0438\u0448\u043A\u043E\u043C \u043C\u0430\u043B\u043E, \u0447\u0442\u043E\u0431\u044B \u0441\u0443\u0434\u0438\u0442\u044C \u043F\u043E \u0441\u043E\u0434\u0435\u0440\u0436\u0430\u043D\u0438\u044E.";
+  var SHORT_BIT = "\u0422\u0435\u043A\u0441\u0442\u0430 \u043C\u0430\u043B\u043E \u0434\u043B\u044F \u0441\u043E\u0434\u0435\u0440\u0436\u0430\u0442\u0435\u043B\u044C\u043D\u043E\u0439 \u043E\u0446\u0435\u043D\u043A\u0438. \u042D\u0442\u043E \u043D\u0435 \u0437\u043D\u0430\u0447\u0438\u0442, \u0447\u0442\u043E \u043C\u0430\u0442\u0435\u0440\u0438\u0430\u043B \u0444\u0435\u0439\u043A\u043E\u0432\u044B\u0439.";
+  var LANGUAGE_NOTE = {
+    ru: "\u0422\u0435\u043A\u0441\u0442 \u043D\u0430 \u0440\u0443\u0441\u0441\u043A\u043E\u043C. \u042F\u0437\u044B\u043A \u0441\u0430\u043C \u043F\u043E \u0441\u0435\u0431\u0435 \u043D\u0438\u0447\u0435\u0433\u043E \u043D\u0435 \u0434\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0435\u0442.",
+    en: "\u0422\u0435\u043A\u0441\u0442 \u043D\u0430 \u0430\u043D\u0433\u043B\u0438\u0439\u0441\u043A\u043E\u043C. \u042F\u0437\u044B\u043A \u0441\u0430\u043C \u043F\u043E \u0441\u0435\u0431\u0435 \u043D\u0438\u0447\u0435\u0433\u043E \u043D\u0435 \u0434\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0435\u0442.",
+    mixed: "\u0412 \u0442\u0435\u043A\u0441\u0442\u0435 \u0441\u043C\u0435\u0448\u0430\u043D\u044B \u0440\u0443\u0441\u0441\u043A\u0438\u0439 \u0438 \u0430\u043D\u0433\u043B\u0438\u0439\u0441\u043A\u0438\u0439.",
+    unknown: ""
+  };
+  function detectLanguage(text) {
+    const value = String(text || "");
+    const cyr = (value.match(/[А-Яа-яЁё]/g) || []).length;
+    const lat = (value.match(/[A-Za-z]/g) || []).length;
+    const letters = cyr + lat;
+    if (letters < 20) return "unknown";
+    if (cyr / letters >= 0.7) return "ru";
+    if (lat / letters >= 0.7) return "en";
+    if (cyr > 8 && lat > 8) return "mixed";
+    return "unknown";
+  }
+  function excerptOf(text, max = 320) {
+    const value = String(text || "").replace(/\s+/g, " ").trim();
+    if (value.length <= max) return value;
+    const cut = value.slice(0, max);
+    const space = cut.lastIndexOf(" ");
+    return `${(space > 180 ? cut.slice(0, space) : cut).trim()}\u2026`;
+  }
+  function scoreArticleText(text) {
+    const value = String(text || "").replace(/\s+/g, " ").trim();
+    const language = detectLanguage(value);
+    if (value.length < 80) {
+      return { score: 50, penalty: 0, notes: [], meter: 50, language, enough: false };
+    }
+    let score = 62;
+    const notes = [];
+    if (ATTRIBUTION.test(value)) {
+      score += 6;
+      notes.push("\u0415\u0441\u0442\u044C \u043E\u0442\u0441\u044B\u043B\u043A\u0430 \u043A \u0438\u0441\u0442\u043E\u0447\u043D\u0438\u043A\u0443 \u0438\u043B\u0438 \u0443\u0447\u0430\u0441\u0442\u043D\u0438\u043A\u0443 \u0441\u043E\u0431\u044B\u0442\u0438\u044F.");
+    }
+    if (QUOTE.test(value)) score += 4;
+    if (DATE.test(value)) score += 3;
+    const rhetoric = analyzeRhetoric(value);
+    if (rhetoric.penalty) notes.push(...rhetoric.notes);
+    score -= rhetoric.penalty;
+    if (ANON.test(value)) {
+      score -= 8;
+      notes.push("\u041E\u043F\u043E\u0440\u0430 \u043D\u0430 \u0431\u0435\u0437\u044B\u043C\u044F\u043D\u043D\u044B\u0445 \xAB\u044D\u043A\u0441\u043F\u0435\u0440\u0442\u043E\u0432\xBB \u0431\u0435\u0437 \u0438\u043C\u0435\u043D\u0438 \u0438 \u0434\u043E\u043B\u0436\u043D\u043E\u0441\u0442\u0438.");
+    }
+    if (SHARE.test(value)) {
+      score -= 6;
+      notes.push("\u0422\u0435\u043A\u0441\u0442 \u043F\u0440\u043E\u0441\u0438\u0442 \u0440\u0435\u043F\u043E\u0441\u0442 \u0432\u043C\u0435\u0441\u0442\u043E \u043F\u0440\u043E\u0432\u0435\u0440\u044F\u0435\u043C\u043E\u0433\u043E \u0444\u0430\u043A\u0442\u0430.");
+    }
+    if (FIRST.test(value)) {
+      score -= 6;
+      notes.push("\u041F\u043E\u0434\u0430\u0447\u0430 \u043E\u0442 \u043F\u0435\u0440\u0432\u043E\u0433\u043E \u043B\u0438\u0446\u0430 \u0431\u0435\u0437 \u043D\u0435\u0437\u0430\u0432\u0438\u0441\u0438\u043C\u043E\u0439 \u043E\u043F\u043E\u0440\u044B.");
+    }
+    return {
+      score: clamp(Math.round(score), 8, 92),
+      penalty: rhetoric.penalty,
+      notes: notes.slice(0, 3),
+      meter: rhetoric.meter,
+      language,
+      enough: value.length >= MIN_ARTICLE_CHARS
+    };
+  }
+  function applyText(result, text, { mode = "hover" } = {}) {
+    const value = String(text || "").replace(/\s+/g, " ").trim().slice(0, 8e3);
+    const language = detectLanguage(value);
+    const carried = {
+      ...result,
+      language,
+      languageNote: LANGUAGE_NOTE[language] || "",
+      textExcerpt: excerptOf(value),
+      textChars: value.length
+    };
+    if (!value) return { ...result, language: "unknown", languageNote: "", textExcerpt: "", textChars: 0 };
+    const explicit = mode === "page" || mode === "selection" || mode === "paste";
+    if (value.length < 80) {
+      if (!explicit) return carried;
+      return shortResult(carried, mode === "page" ? SHORT_PAGE : SHORT_BIT);
+    }
+    if (mode === "page" && value.length < MIN_ARTICLE_CHARS) return shortResult(carried, SHORT_PAGE);
+    if (mode === "hover" && value.length < MIN_ARTICLE_CHARS) {
+      return {
+        ...carried,
+        reasons: unique([
+          "\u0421\u043E \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u044B \u043F\u0440\u043E\u0447\u0438\u0442\u0430\u043D \u0442\u043E\u043B\u044C\u043A\u043E \u043A\u043E\u0440\u043E\u0442\u043A\u0438\u0439 \u0444\u0440\u0430\u0433\u043C\u0435\u043D\u0442 \u2014 \u0432\u0435\u0440\u0434\u0438\u043A\u0442 \u043D\u0430 \u043D\u0451\u043C \u043D\u0435 \u0441\u0442\u0440\u043E\u0438\u0442\u0441\u044F.",
+          ...result.reasons
+        ]).slice(0, 6)
+      };
+    }
+    if (result.verdict === "satire" || result.flags?.satire) {
+      return {
+        ...carried,
+        meters: { ...result.meters, rhetoric: scoreArticleText(value).meter }
+      };
+    }
+    const scored = scoreArticleText(value);
+    const weight = value.length < MIN_ARTICLE_CHARS ? 0.22 : value.length < 600 ? 0.28 : 0.45;
+    const blended = Math.round(result.score * (1 - weight) + scored.score * weight);
+    const flags = {
+      ...result.flags,
+      harsh: Boolean(result.flags?.harsh) || scored.penalty >= 14
+    };
+    return settle(result, {
+      score: railScore(result, blended),
+      flags,
+      reasons: unique([...scored.notes, ...result.reasons]),
+      rhetoricPenalty: Math.max(result.rhetoricPenalty || 0, scored.penalty),
+      meters: {
+        ...result.meters,
+        rhetoric: scored.meter,
+        cross: clamp(Math.round((result.meters?.cross || 34) * 0.55 + 74 * 0.45), 0, 100)
+      },
+      language,
+      languageNote: carried.languageNote,
+      textExcerpt: carried.textExcerpt,
+      textChars: value.length
+    });
+  }
+  function shortResult(result, summary) {
+    return {
+      ...result,
+      verdict: result.verdict === "satire" ? "satire" : "insufficient",
+      summary,
+      reasons: unique([SHORT_BIT, ...result.reasons]).slice(0, 6),
+      confidence: Math.min(result.confidence ?? 0.3, 0.38)
+    };
+  }
+  function railScore(result, blended) {
+    let score = blended;
+    const tier = result.source?.tier;
+    if ((tier === "high" || tier === "factcheck") && score < 52) score = 52;
+    if (tier === "state" && score < 40) score = 40;
+    if ((tier === "low" || result.flags?.impersonation) && score > result.score) score = result.score;
+    return clamp(score, 3, 96);
+  }
+  function unique(items) {
+    const seen = /* @__PURE__ */ new Set();
+    const out = [];
+    for (const item of items) {
+      const line = String(item || "").trim();
+      if (!line || seen.has(line)) continue;
+      seen.add(line);
+      out.push(line);
+    }
+    return out;
+  }
+
+  // ../../workspace/auris/lib/defaults.js
   var DEFAULT_SETTINGS = {
     enabled: true,
     hoverDelay: 260,
@@ -818,7 +1126,7 @@
   };
   var SETTINGS_KEY = "auris.settings";
 
-  // ../../content/content.js
+  // ../../workspace/auris/content/content.js
   if (document.documentElement.dataset.aurisPreview !== "true") {
     let settings = { ...DEFAULT_SETTINGS };
     chrome.storage.local.get(SETTINGS_KEY, (data) => {
@@ -828,11 +1136,12 @@
       document,
       createLens: (doc) => createLens(doc, { cssHref: chrome.runtime.getURL("ui/card.css") }),
       evaluate: evaluateLink,
+      applyText,
       shouldInspect,
       present,
       getSettings: () => settings,
       requestEnrich: (payload) => new Promise((resolve) => {
-        const timer = setTimeout(() => resolve(null), 1e4);
+        const timer = setTimeout(() => resolve(null), 16e3);
         try {
           chrome.runtime.sendMessage({ type: "auris:enrich", ...payload }, (response) => {
             clearTimeout(timer);
@@ -844,6 +1153,22 @@
           resolve(null);
         }
       })
+    });
+    document.addEventListener("mouseup", (event) => {
+      if (hover.owns(event.target)) return;
+      setTimeout(() => hover.considerSelection(), 40);
+    });
+    chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+      if (message?.type !== "auris:check") return;
+      const mode = message.mode === "selection" ? "selection" : "page";
+      const text = mode === "selection" ? String(message.selectionText || document.getSelection?.() || "").replace(/\s+/g, " ").trim() : extractArticleFromDocument(document);
+      hover.showCheck({
+        mode,
+        text,
+        href: location.href,
+        title: document.title || ""
+      });
+      sendResponse({ ok: true });
     });
     chrome.storage.onChanged.addListener((changes, area) => {
       if (area === "local" && changes[SETTINGS_KEY]?.newValue) {

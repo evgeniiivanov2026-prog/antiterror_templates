@@ -2,10 +2,10 @@
   "manifest_version": 3,
   "name": "AURIS — оценка новостей",
   "short_name": "AURIS",
-  "version": "1.0.0",
-  "description": "При наведении на ссылку показывает, похожа ли новость на фейк. Локальные сигналы, Gemini Nano и облачный ИИ.",
+  "version": "1.1.0",
+  "description": "Оценивает новость при наведении, по выделенному тексту и по странице. Локальные сигналы, Gemini Nano и облачный ИИ.",
   "minimum_chrome_version": "120",
-  "permissions": ["storage"],
+  "permissions": ["storage", "contextMenus", "activeTab"],
   "host_permissions": ["https://*/*", "http://*/*"],
   "background": {
     "service_worker": "background/service-worker.js",

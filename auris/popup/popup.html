@@ -32,6 +32,23 @@
       </label>
     </section>
 
+    <section class="check">
+      <button id="check-tab" type="button">Проверить вкладку</button>
+      <label>
+        <span>Или вставьте текст</span>
+        <textarea id="paste" rows="4" maxlength="8000" placeholder="Абзац статьи, без адреса страницы"></textarea>
+      </label>
+      <button id="check-text" type="button">Проверить текст</button>
+      <div id="check-result" hidden>
+        <div class="score" data-score></div>
+        <div class="item">
+          <b data-label></b>
+          <span data-summary></span>
+          <span data-excerpt></span>
+        </div>
+      </div>
+    </section>
+
     <form id="settings" autocomplete="off">
       <label>
         <span>Как считать</span>
@@ -69,7 +86,7 @@
 
       <div class="checks">
         <label><input id="newsOnly" type="checkbox" checked> Только похожие на материал ссылки</label>
-        <label><input id="deepFetch" type="checkbox" checked> Читать заголовок страницы</label>
+        <label><input id="deepFetch" type="checkbox" checked> Читать текст страницы по ссылке</label>
       </div>
 
       <label class="delay">
@@ -78,7 +95,7 @@
       </label>
 
       <button id="test" type="button">Проверить модель</button>
-      <p id="status" role="status">Ключ не уходит никуда, кроме выбранного провайдера. В страницу отправляется только адрес, текст ссылки, заголовок и описание.</p>
+      <p id="status" role="status">Ключ не уходит никуда, кроме выбранного провайдера. В модель уходят адрес, текст ссылки, заголовок, описание и фрагмент статьи.</p>
     </form>
 
     <section>
