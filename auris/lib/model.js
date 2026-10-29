@@ -45,7 +45,7 @@ export function fuse(local, ai) {
     railed = true;
     reasons.push("Модель смягчила оценку, но адрес остаётся проблемным.");
   }
-  if ((local.source?.tier === "high" || local.source?.tier === "factcheck") && (verdict === "likely_fake" || verdict === "suspicious")) {
+  if ((local.source?.tier === "high" || local.source?.tier === "factcheck" || local.source?.tier === "official" || local.source?.tier === "registry") && (verdict === "likely_fake" || verdict === "suspicious")) {
     verdict = "mixed";
     railed = true;
     reasons.push("Модель сомневается, но репутация редакции этого не подтверждает. Нужен разбор конкретного текста.");

@@ -22,6 +22,7 @@ export const ENGINE_LABEL = {
   local: "Локально",
   ondevice: "Gemini Nano",
   cloud: "Облако",
+  yandex: "Алиса",
 };
 
 export const VERDICTS = new Set(Object.keys(VERDICT_LABEL));

@@ -1,5 +1,5 @@
 import { VERDICT_LABEL } from "../lib/copy.js";
-import { DEFAULT_SECRET, DEFAULT_SETTINGS, HISTORY_KEY, SECRET_KEY, SETTINGS_KEY } from "../lib/defaults.js";
+import { DEFAULT_SECRET, DEFAULT_SETTINGS, HISTORY_KEY, SECRET_KEY, SETTINGS_KEY, WELCOME_KEY } from "../lib/defaults.js";
 import { present } from "../lib/present.js";
 import { assessPlain } from "../lib/text.js";
 
@@ -7,7 +7,7 @@ const $ = (id) => document.getElementById(id);
 const hasChrome = Boolean(globalThis.chrome?.storage?.local && globalThis.chrome?.runtime?.id);
 
 const fields = ["enabled", "aiMode", "newsOnly", "deepFetch", "hoverDelay"];
-const secretFields = ["provider", "apiKey", "model", "endpoint"];
+const secretFields = ["provider", "apiKey", "model", "endpoint", "folderId"];
 
 if (hasChrome) boot();
 else $("status").textContent = "Окно настроек открыто вне расширения. В Chrome здесь появятся ключ и история.";
@@ -15,7 +15,7 @@ else $("status").textContent = "Окно настроек открыто вне 
 $("hoverDelay").addEventListener("input", () => {
   $("delay-value").textContent = `${$("hoverDelay").value} мс`;
 });
-$("provider").addEventListener("change", syncEndpoint);
+$("provider").addEventListener("change", syncProvider);
 for (const id of [...fields, ...secretFields]) {
   $(id).addEventListener("change", save);
   if ($(id).type === "text" || $(id).type === "password" || $(id).type === "url" || $(id).type === "range") {
@@ -25,13 +25,17 @@ for (const id of [...fields, ...secretFields]) {
 $("test").addEventListener("click", testModel);
 $("check-tab").addEventListener("click", checkTab);
 $("check-text").addEventListener("click", checkText);
+$("guide").addEventListener("click", openGuide);
+$("intro-open").addEventListener("click", openGuide);
+$("intro-done").addEventListener("click", dismissIntro);
 
 function boot() {
-  chrome.storage.local.get([SETTINGS_KEY, SECRET_KEY, HISTORY_KEY], (data) => {
+  chrome.storage.local.get([SETTINGS_KEY, SECRET_KEY, HISTORY_KEY, WELCOME_KEY], (data) => {
     const settings = { ...DEFAULT_SETTINGS, ...(data[SETTINGS_KEY] || {}) };
     const secret = { ...DEFAULT_SECRET, ...(data[SECRET_KEY] || {}) };
     fill(settings, secret);
     paintHistory(data[HISTORY_KEY] || []);
+    $("intro").hidden = Boolean(data[WELCOME_KEY]?.seen);
   });
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === "local" && changes[HISTORY_KEY]) paintHistory(changes[HISTORY_KEY].newValue || []);
@@ -49,21 +53,37 @@ function fill(settings, secret) {
   $("apiKey").value = secret.apiKey;
   $("model").value = secret.model;
   $("endpoint").value = secret.endpoint;
-  syncEndpoint();
+  $("folderId").value = secret.folderId || "";
+  syncProvider();
 }
 
-function syncEndpoint() {
-  const openai = $("provider").value === "openai";
-  $("endpoint-field").hidden = !openai;
-  if (!$("model").value) {
-    $("model").placeholder = openai ? "gpt-4.1-mini" : "gemini-2.5-flash";
-  }
+function syncProvider() {
+  const provider = $("provider").value;
+  $("endpoint-field").hidden = provider !== "openai";
+  $("folder-field").hidden = provider !== "yandex";
+  const placeholders = {
+    yandex: "aliceai-llm",
+    openai: "gpt-4.1-mini",
+    gemini: "gemini-2.5-flash",
+  };
+  if (!$("model").value) $("model").placeholder = placeholders[provider] || placeholders.gemini;
 }
 
-syncEndpoint();
+syncProvider();
+
+function openGuide() {
+  if (!hasChrome) return;
+  chrome.tabs.create({ url: chrome.runtime.getURL("welcome/welcome.html") });
+}
+
+function dismissIntro() {
+  $("intro").hidden = true;
+  if (!hasChrome) return;
+  chrome.storage.local.set({ [WELCOME_KEY]: { seen: true, at: Date.now() } });
+}
 
 function save() {
-  syncEndpoint();
+  syncProvider();
   if (!hasChrome) return;
   const settings = {
     enabled: $("enabled").checked,
@@ -77,6 +97,7 @@ function save() {
     apiKey: $("apiKey").value.trim(),
     model: $("model").value.trim(),
     endpoint: $("endpoint").value.trim(),
+    folderId: $("folderId").value.trim(),
   };
   chrome.storage.local.set({
     [SETTINGS_KEY]: settings,

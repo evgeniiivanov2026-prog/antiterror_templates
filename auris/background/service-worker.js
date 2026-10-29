@@ -5,7 +5,7 @@ import { extractMeta } from "../lib/meta.js";
 import { fuse } from "../lib/model.js";
 import { buildUserPrompt, SYSTEM_PROMPT } from "../lib/prompt.js";
 import { applyText, assessPlain, MIN_ARTICLE_CHARS } from "../lib/text.js";
-import { DEFAULT_SECRET, DEFAULT_SETTINGS, HISTORY_KEY, SECRET_KEY, SETTINGS_KEY } from "../lib/defaults.js";
+import { DEFAULT_SECRET, DEFAULT_SETTINGS, HISTORY_KEY, SECRET_KEY, SETTINGS_KEY, WELCOME_KEY } from "../lib/defaults.js";
 
 const cache = new Map();
 const inflight = new Map();
@@ -38,7 +38,14 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (area === "local" && (changes[SETTINGS_KEY] || changes[SECRET_KEY])) cache.clear();
 });
 
-chrome.runtime.onInstalled.addListener(installMenus);
+chrome.runtime.onInstalled.addListener((details) => {
+  installMenus();
+  if (details.reason !== "install" && details.reason !== "update") return;
+  chrome.storage.local.get(WELCOME_KEY, (data) => {
+    if (data[WELCOME_KEY]?.seen) return;
+    chrome.tabs.create({ url: chrome.runtime.getURL("welcome/welcome.html") });
+  });
+});
 chrome.runtime.onStartup.addListener(installMenus);
 installMenus();
 
@@ -168,6 +175,13 @@ async function testAI() {
   const secret = await getSecret();
   const settings = await getSettings();
   const diagnosis = await diagnoseAI(secret);
+  if (secret.provider === "yandex" && !diagnosis.hasFolder) {
+    return {
+      ok: false,
+      diagnosis,
+      message: "Для Алисы нужен ID каталога из Yandex AI Studio и API-ключ.",
+    };
+  }
   const ai = await assessWithAI({
     mode: settings.aiMode === "local" ? "auto" : settings.aiMode,
     secret,
@@ -186,7 +200,7 @@ async function testAI() {
     return {
       ok: false,
       diagnosis,
-      message: "Модель не ответила. Скачайте Gemini Nano в Chrome или сохраните ключ облака.",
+      message: "Модель не ответила. Проверьте ключ Алисы и ID каталога, либо Gemini Nano или другой ключ.",
     };
   }
   return {
@@ -194,7 +208,11 @@ async function testAI() {
     diagnosis,
     engine: ai.engine,
     summary: ai.summary,
-    message: ai.engine === "ondevice" ? "Ответил встроенный Gemini Nano." : "Ответило облако.",
+    message: ai.engine === "ondevice"
+      ? "Ответил встроенный Gemini Nano."
+      : ai.engine === "yandex"
+        ? "Ответила Алиса."
+        : "Ответило облако.",
   };
 }
 

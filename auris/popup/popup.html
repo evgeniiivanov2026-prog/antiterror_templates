@@ -17,9 +17,18 @@
       </div>
       <div>
         <div class="brand">AURIS</div>
-        <p>Оценка новости появляется прямо на ссылке.</p>
+        <p>Оценка новости для русской аудитории.</p>
       </div>
     </header>
+
+    <section id="intro" class="intro" hidden>
+      <strong>Первый запуск</strong>
+      <p>Карточка появляется на ссылке. Сайты из банка российских источников отмечаются как хорошие, остальные — нет. Алиса подключается своим ключом.</p>
+      <div class="intro-actions">
+        <button id="intro-open" type="button">Открыть инструкцию</button>
+        <button id="intro-done" type="button">Уже понятно</button>
+      </div>
+    </section>
 
     <section class="switch-row">
       <div>
@@ -64,6 +73,7 @@
         <label>
           <span>Облако</span>
           <select id="provider">
+            <option value="yandex">Алиса / YandexGPT</option>
             <option value="gemini">Gemini</option>
             <option value="openai">OpenAI-совместимый</option>
           </select>
@@ -77,6 +87,11 @@
       <label>
         <span>Ключ API</span>
         <input id="apiKey" type="password" placeholder="Хранится только в этом браузере" autocomplete="off" spellcheck="false">
+      </label>
+
+      <label id="folder-field" hidden>
+        <span>ID каталога</span>
+        <input id="folderId" type="text" placeholder="b1g… из Yandex AI Studio" spellcheck="false" autocomplete="off">
       </label>
 
       <label id="endpoint-field" hidden>
@@ -95,7 +110,8 @@
       </label>
 
       <button id="test" type="button">Проверить модель</button>
-      <p id="status" role="status">Ключ не уходит никуда, кроме выбранного провайдера. В модель уходят адрес, текст ссылки, заголовок, описание и фрагмент статьи.</p>
+      <p id="status" role="status">Ключ Алисы, Gemini или OpenAI остаётся в браузере и уходит только выбранному провайдеру. В модель уходят адрес, текст ссылки, заголовок, описание и фрагмент статьи.</p>
+      <button id="guide" type="button">Инструкция</button>
     </form>
 
     <section>

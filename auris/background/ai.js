@@ -3,14 +3,25 @@ import { parseModelJson } from "../lib/model.js";
 const GEMINI_MODEL = "gemini-2.5-flash";
 const OPENAI_MODEL = "gpt-4.1-mini";
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
+const YANDEX_URL = "https://llm.api.cloud.yandex.net/v1/chat/completions";
+const ALICE_MODEL = "aliceai-llm";
+
+export function yandexModelUri(folderId, model) {
+  const raw = String(model || "").trim();
+  if (/^gpt:\/\/[A-Za-z0-9_-]{6,40}\/[A-Za-z0-9._-]{1,64}$/.test(raw)) return raw;
+  const folder = String(folderId || "").trim();
+  if (!/^[A-Za-z0-9_-]{6,40}$/.test(folder)) return "";
+  const slug = /^[A-Za-z0-9._-]{1,64}$/.test(raw) ? raw : ALICE_MODEL;
+  return `gpt://${folder}/${slug}`;
+}
 
 export async function assessWithAI({ mode, secret, prompt, system, signal }) {
   if (signal?.aborted || mode === "local") return null;
   if (mode === "ondevice") return tag(await onDevice(prompt, system), "ondevice");
-  if (mode === "cloud") return tag(await cloud(prompt, system, secret, signal), "cloud");
+  if (mode === "cloud") return tag(await cloud(prompt, system, secret, signal), cloudEngine(secret));
   const localModel = await onDevice(prompt, system);
   if (localModel) return tag(localModel, "ondevice");
-  if (secret?.apiKey && !signal?.aborted) return tag(await cloud(prompt, system, secret, signal), "cloud");
+  if (secret?.apiKey && !signal?.aborted) return tag(await cloud(prompt, system, secret, signal), cloudEngine(secret));
   return null;
 }
 
@@ -18,7 +29,8 @@ export async function diagnoseAI(secret) {
   return {
     onDevice: await onDeviceStatus(),
     hasKey: Boolean(secret?.apiKey),
-    provider: secret?.provider === "openai" ? "openai" : "gemini",
+    hasFolder: Boolean(String(secret?.folderId || "").trim()),
+    provider: secret?.provider === "openai" ? "openai" : secret?.provider === "yandex" ? "yandex" : "gemini",
   };
 }
 
@@ -67,16 +79,47 @@ function getLanguageModel() {
 
 async function cloud(prompt, system, secret, signal) {
   if (!secret?.apiKey || signal?.aborted) return null;
-  const provider = secret.provider === "openai" ? "openai" : "gemini";
+  const provider = secret.provider === "openai" ? "openai" : secret.provider === "yandex" ? "yandex" : "gemini";
   const combined = signal ? AbortSignal.any([signal, AbortSignal.timeout(12000)]) : AbortSignal.timeout(12000);
   try {
     const text = provider === "gemini"
       ? await gemini(prompt, system, secret, combined)
-      : await openai(prompt, system, secret, combined);
+      : provider === "yandex"
+        ? await yandex(prompt, system, secret, combined)
+        : await openai(prompt, system, secret, combined);
     return parseModelJson(text);
   } catch {
     return null;
   }
+}
+
+async function yandex(prompt, system, secret, signal) {
+  const model = yandexModelUri(secret.folderId, secret.model);
+  if (!model) throw new Error("yandex folder");
+  const key = String(secret.apiKey || "");
+  const response = await fetch(YANDEX_URL, {
+    method: "POST",
+    signal,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: key.startsWith("t1.") ? `Bearer ${key}` : `Api-Key ${key}`,
+    },
+    body: JSON.stringify({
+      model,
+      temperature: 0.2,
+      max_tokens: 400,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: prompt },
+      ],
+    }),
+  });
+  if (!response.ok) throw new Error(`yandex ${response.status}`);
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) return content.map((part) => part?.text || "").join("\n");
+  return data.result?.alternatives?.[0]?.message?.text || "";
 }
 
 async function gemini(prompt, system, secret, signal) {
@@ -163,6 +206,10 @@ function within(promise, ms, fallback) {
       },
     );
   });
+}
+
+function cloudEngine(secret) {
+  return secret?.provider === "yandex" ? "yandex" : "cloud";
 }
 
 function tag(result, engine) {

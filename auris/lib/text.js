@@ -160,7 +160,7 @@ function shortResult(result, summary) {
 function railScore(result, blended) {
   let score = blended;
   const tier = result.source?.tier;
-  if ((tier === "high" || tier === "factcheck") && score < 52) score = 52;
+  if ((tier === "high" || tier === "factcheck" || tier === "official" || tier === "registry") && score < 52) score = 52;
   if (tier === "state" && score < 40) score = 40;
   if ((tier === "low" || result.flags?.impersonation) && score > result.score) score = result.score;
   return clamp(score, 3, 96);

@@ -1,5 +1,5 @@
 (() => {
-  // ../../workspace/auris/content/hover.js
+  // auris/content/hover.js
   function attachHover(env) {
     const lens = env.createLens(env.document);
     lens.host.style.position = "fixed";
@@ -190,7 +190,7 @@
     };
   }
 
-  // ../../workspace/auris/lib/article.js
+  // auris/lib/article.js
   function extractArticleFromDocument(doc) {
     if (!doc?.body || typeof doc.createTreeWalker !== "function") return "";
     const article = textOf(doc, doc.querySelector("article"));
@@ -216,7 +216,7 @@
     return chunks.join(" ").replace(/\s+/g, " ").trim();
   }
 
-  // ../../workspace/auris/ui/card.js
+  // auris/ui/card.js
   var import_meta2 = {};
   var RADIUS = 46;
   var CIRC = 2 * Math.PI * RADIUS;
@@ -413,12 +413,12 @@
     return panel;
   }
 
-  // ../../workspace/auris/lib/clamp.js
+  // auris/lib/clamp.js
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
   }
 
-  // ../../workspace/auris/lib/copy.js
+  // auris/lib/copy.js
   var VERDICT_LABEL = {
     reliable: "\u0414\u043E\u0441\u0442\u043E\u0432\u0435\u0440\u043D\u043E",
     leaning: "\u0421\u043A\u043E\u0440\u0435\u0435 \u0434\u0430",
@@ -440,11 +440,115 @@
   var ENGINE_LABEL = {
     local: "\u041B\u043E\u043A\u0430\u043B\u044C\u043D\u043E",
     ondevice: "Gemini Nano",
-    cloud: "\u041E\u0431\u043B\u0430\u043A\u043E"
+    cloud: "\u041E\u0431\u043B\u0430\u043A\u043E",
+    yandex: "\u0410\u043B\u0438\u0441\u0430"
   };
   var VERDICTS = new Set(Object.keys(VERDICT_LABEL));
 
-  // ../../workspace/auris/lib/sources.js
+  // auris/lib/ru-bank.js
+  var OFFICIAL = {
+    "kremlin.ru": "\u041F\u0440\u0435\u0437\u0438\u0434\u0435\u043D\u0442 \u0420\u043E\u0441\u0441\u0438\u0438",
+    "government.ru": "\u041F\u0440\u0430\u0432\u0438\u0442\u0435\u043B\u044C\u0441\u0442\u0432\u043E \u0420\u043E\u0441\u0441\u0438\u0438",
+    "duma.gov.ru": "\u0413\u043E\u0441\u0434\u0443\u043C\u0430",
+    "council.gov.ru": "\u0421\u043E\u0432\u0435\u0442 \u0424\u0435\u0434\u0435\u0440\u0430\u0446\u0438\u0438",
+    "scrf.gov.ru": "\u0421\u043E\u0432\u0435\u0442 \u0431\u0435\u0437\u043E\u043F\u0430\u0441\u043D\u043E\u0441\u0442\u0438",
+    "mid.ru": "\u041C\u0418\u0414 \u0420\u043E\u0441\u0441\u0438\u0438",
+    "mil.ru": "\u041C\u0438\u043D\u043E\u0431\u043E\u0440\u043E\u043D\u044B",
+    "mvd.ru": "\u041C\u0412\u0414",
+    "mchs.gov.ru": "\u041C\u0427\u0421",
+    "sledcom.ru": "\u0421\u043B\u0435\u0434\u0441\u0442\u0432\u0435\u043D\u043D\u044B\u0439 \u043A\u043E\u043C\u0438\u0442\u0435\u0442",
+    "genproc.gov.ru": "\u0413\u0435\u043D\u043F\u0440\u043E\u043A\u0443\u0440\u0430\u0442\u0443\u0440\u0430",
+    "vsrf.ru": "\u0412\u0435\u0440\u0445\u043E\u0432\u043D\u044B\u0439 \u0441\u0443\u0434",
+    "ksrf.ru": "\u041A\u043E\u043D\u0441\u0442\u0438\u0442\u0443\u0446\u0438\u043E\u043D\u043D\u044B\u0439 \u0441\u0443\u0434",
+    "cbr.ru": "\u0411\u0430\u043D\u043A \u0420\u043E\u0441\u0441\u0438\u0438",
+    "fedsfm.ru": "\u0420\u043E\u0441\u0444\u0438\u043D\u043C\u043E\u043D\u0438\u0442\u043E\u0440\u0438\u043D\u0433",
+    "minfin.gov.ru": "\u041C\u0438\u043D\u0444\u0438\u043D",
+    "nalog.gov.ru": "\u0424\u041D\u0421",
+    "rosstat.gov.ru": "\u0420\u043E\u0441\u0441\u0442\u0430\u0442",
+    "publication.pravo.gov.ru": "\u041E\u0444\u0438\u0446\u0438\u0430\u043B\u044C\u043D\u043E\u0435 \u043E\u043F\u0443\u0431\u043B\u0438\u043A\u043E\u0432\u0430\u043D\u0438\u0435",
+    "pravo.gov.ru": "\u041E\u0444\u0438\u0446\u0438\u0430\u043B\u044C\u043D\u044B\u0439 \u0438\u043D\u0442\u0435\u0440\u043D\u0435\u0442-\u043F\u043E\u0440\u0442\u0430\u043B \u043F\u0440\u0430\u0432\u043E\u0432\u043E\u0439 \u0438\u043D\u0444\u043E\u0440\u043C\u0430\u0446\u0438\u0438",
+    "digital.gov.ru": "\u041C\u0438\u043D\u0446\u0438\u0444\u0440\u044B",
+    "economy.gov.ru": "\u041C\u0438\u043D\u044D\u043A\u043E\u043D\u043E\u043C\u0440\u0430\u0437\u0432\u0438\u0442\u0438\u044F",
+    "minzdrav.gov.ru": "\u041C\u0438\u043D\u0437\u0434\u0440\u0430\u0432",
+    "edu.gov.ru": "\u041C\u0438\u043D\u043F\u0440\u043E\u0441\u0432\u0435\u0449\u0435\u043D\u0438\u044F",
+    "minobrnauki.gov.ru": "\u041C\u0438\u043D\u043E\u0431\u0440\u043D\u0430\u0443\u043A\u0438",
+    "mintrans.ru": "\u041C\u0438\u043D\u0442\u0440\u0430\u043D\u0441",
+    "minstroyrf.gov.ru": "\u041C\u0438\u043D\u0441\u0442\u0440\u043E\u0439",
+    "minpromtorg.gov.ru": "\u041C\u0438\u043D\u043F\u0440\u043E\u043C\u0442\u043E\u0440\u0433",
+    "mnr.gov.ru": "\u041C\u0438\u043D\u043F\u0440\u0438\u0440\u043E\u0434\u044B",
+    "culture.gov.ru": "\u041C\u0438\u043D\u043A\u0443\u043B\u044C\u0442\u0443\u0440\u044B",
+    "fas.gov.ru": "\u0424\u0410\u0421",
+    "roskomnadzor.gov.ru": "\u0420\u043E\u0441\u043A\u043E\u043C\u043D\u0430\u0434\u0437\u043E\u0440",
+    "rkn.gov.ru": "\u0420\u043E\u0441\u043A\u043E\u043C\u043D\u0430\u0434\u0437\u043E\u0440",
+    "rospotrebnadzor.ru": "\u0420\u043E\u0441\u043F\u043E\u0442\u0440\u0435\u0431\u043D\u0430\u0434\u0437\u043E\u0440",
+    "rostrud.gov.ru": "\u0420\u043E\u0441\u0442\u0440\u0443\u0434",
+    "rosreestr.gov.ru": "\u0420\u043E\u0441\u0440\u0435\u0435\u0441\u0442\u0440",
+    "customs.gov.ru": "\u0424\u0422\u0421",
+    "sfr.gov.ru": "\u0421\u043E\u0446\u0438\u0430\u043B\u044C\u043D\u044B\u0439 \u0444\u043E\u043D\u0434",
+    "pfr.gov.ru": "\u0421\u043E\u0446\u0438\u0430\u043B\u044C\u043D\u044B\u0439 \u0444\u043E\u043D\u0434",
+    "gosuslugi.ru": "\u0413\u043E\u0441\u0443\u0441\u043B\u0443\u0433\u0438",
+    "mos.ru": "\u041F\u0440\u0430\u0432\u0438\u0442\u0435\u043B\u044C\u0441\u0442\u0432\u043E \u041C\u043E\u0441\u043A\u0432\u044B",
+    "gov.spb.ru": "\u041F\u0440\u0430\u0432\u0438\u0442\u0435\u043B\u044C\u0441\u0442\u0432\u043E \u0421\u0430\u043D\u043A\u0442-\u041F\u0435\u0442\u0435\u0440\u0431\u0443\u0440\u0433\u0430",
+    "data.gov.ru": "\u041F\u043E\u0440\u0442\u0430\u043B \u043E\u0442\u043A\u0440\u044B\u0442\u044B\u0445 \u0434\u0430\u043D\u043D\u044B\u0445"
+  };
+  var STATE_MEDIA = {
+    "tass.ru": "\u0422\u0410\u0421\u0421",
+    "tass.com": "\u0422\u0410\u0421\u0421",
+    "ria.ru": "\u0420\u0418\u0410 \u041D\u043E\u0432\u043E\u0441\u0442\u0438",
+    "rg.ru": "\u0420\u043E\u0441\u0441\u0438\u0439\u0441\u043A\u0430\u044F \u0433\u0430\u0437\u0435\u0442\u0430",
+    "1tv.ru": "\u041F\u0435\u0440\u0432\u044B\u0439 \u043A\u0430\u043D\u0430\u043B",
+    "ntv.ru": "\u041D\u0422\u0412",
+    "vesti.ru": "\u0412\u0435\u0441\u0442\u0438",
+    "smotrim.ru": "\u0421\u043C\u043E\u0442\u0440\u0438\u043C",
+    "tvzvezda.ru": "\u0422\u0435\u043B\u0435\u043A\u0430\u043D\u0430\u043B \xAB\u0417\u0432\u0435\u0437\u0434\u0430\xBB",
+    "5-tv.ru": "\u041F\u044F\u0442\u044B\u0439 \u043A\u0430\u043D\u0430\u043B",
+    "rt.com": "RT",
+    "sputniknews.com": "Sputnik",
+    "sputnikglobe.com": "Sputnik",
+    "iz.ru": "\u0418\u0437\u0432\u0435\u0441\u0442\u0438\u044F"
+  };
+  var NEWSROOM = {
+    "interfax.ru": "\u0418\u043D\u0442\u0435\u0440\u0444\u0430\u043A\u0441",
+    "rbc.ru": "\u0420\u0411\u041A",
+    "kommersant.ru": "\u041A\u043E\u043C\u043C\u0435\u0440\u0441\u0430\u043D\u0442\u044A",
+    "vedomosti.ru": "\u0412\u0435\u0434\u043E\u043C\u043E\u0441\u0442\u0438",
+    "forbes.ru": "Forbes",
+    "bfm.ru": "Business FM",
+    "dp.ru": "\u0414\u0435\u043B\u043E\u0432\u043E\u0439 \u041F\u0435\u0442\u0435\u0440\u0431\u0443\u0440\u0433",
+    "fontanka.ru": "\u0424\u043E\u043D\u0442\u0430\u043D\u043A\u0430",
+    "lenta.ru": "\u041B\u0435\u043D\u0442\u0430.\u0440\u0443",
+    "gazeta.ru": "\u0413\u0430\u0437\u0435\u0442\u0430.Ru",
+    "aif.ru": "\u0410\u0440\u0433\u0443\u043C\u0435\u043D\u0442\u044B \u0438 \u0444\u0430\u043A\u0442\u044B",
+    "kp.ru": "\u041A\u043E\u043C\u0441\u043E\u043C\u043E\u043B\u044C\u0441\u043A\u0430\u044F \u043F\u0440\u0430\u0432\u0434\u0430",
+    "mk.ru": "\u041C\u043E\u0441\u043A\u043E\u0432\u0441\u043A\u0438\u0439 \u043A\u043E\u043C\u0441\u043E\u043C\u043E\u043B\u0435\u0446",
+    "ura.news": "URA.RU",
+    "e1.ru": "E1",
+    "ngs.ru": "\u041D\u0413\u0421",
+    "74.ru": "74.\u0440\u0443",
+    "kommersant.com": "\u041A\u043E\u043C\u043C\u0435\u0440\u0441\u0430\u043D\u0442\u044A"
+  };
+  function fill(table, kind) {
+    const bank = {};
+    for (const [domain, name] of Object.entries(table)) bank[domain] = { name, kind };
+    return bank;
+  }
+  var RU_BANK = {
+    ...fill(OFFICIAL, "official"),
+    ...fill(STATE_MEDIA, "state"),
+    ...fill(NEWSROOM, "newsroom")
+  };
+  function lookupRu(hostname) {
+    const host = String(hostname || "").replace(/^www\./i, "").toLowerCase();
+    if (!host) return null;
+    const parts = host.split(".");
+    for (let index = 0; index < parts.length - 1; index += 1) {
+      const candidate = parts.slice(index).join(".");
+      if (RU_BANK[candidate]) return { ...RU_BANK[candidate], domain: candidate };
+    }
+    return null;
+  }
+
+  // auris/lib/sources.js
   var SOURCES = {
     "reuters.com": { tier: "high", name: "Reuters" },
     "apnews.com": { tier: "high", name: "Associated Press" },
@@ -596,7 +700,7 @@
     return null;
   }
 
-  // ../../workspace/auris/lib/evaluate.js
+  // auris/lib/evaluate.js
   var FILE_RE = /\.(pdf|zip|rar|7z|png|jpe?g|gif|webp|svg|mp4|mp3|wav|docx?|xlsx?|pptx?|apk|dmg)($|\?)/i;
   var RHETORIC_RULES = [
     {
@@ -634,7 +738,9 @@
       return blank(href, "\u041D\u0435\u043F\u043E\u0445\u043E\u0436\u0435 \u043D\u0430 \u043E\u0431\u044B\u0447\u043D\u0443\u044E \u0432\u0435\u0431-\u0441\u0441\u044B\u043B\u043A\u0443.");
     }
     const domain = url.hostname.replace(/^www\./i, "").toLowerCase();
-    const source = lookupSource(domain);
+    const ru = lookupRu(domain);
+    const listed = ru ? null : lookupSource(domain);
+    const source = ru ? { name: ru.name, tier: ru.kind === "official" ? "official" : "registry", domain: ru.domain } : listed;
     const text = `${anchorText || ""} ${decodePath(url.pathname)}`.replace(/\s+/g, " ").trim();
     const rhetoric = analyzeRhetoric(text);
     const flags = {
@@ -642,7 +748,8 @@
       satire: false,
       shortener: false,
       harsh: false,
-      state: source?.tier === "state"
+      state: ru?.kind === "state" || listed?.tier === "state",
+      unlisted: false
     };
     const reasons = [];
     let score = 50;
@@ -675,30 +782,31 @@
       meters.cross = 22;
       reasons.push("\u0421\u0435\u0440\u0432\u0438\u0441 \u043A\u043E\u0440\u043E\u0442\u043A\u0438\u0445 \u0441\u0441\u044B\u043B\u043E\u043A \u0441\u043A\u0440\u044B\u0432\u0430\u0435\u0442 \u043A\u043E\u043D\u0435\u0447\u043D\u044B\u0439 \u0430\u0434\u0440\u0435\u0441.");
     }
-    if (source?.tier === "high" || source?.tier === "factcheck") {
-      score += source.tier === "factcheck" ? 34 : 32;
-      meters.source = source.tier === "factcheck" ? 94 : 90;
-      meters.cross = 84;
-      reasons.push(
-        source.tier === "factcheck" ? `${source.name} \u2014 \u0444\u0430\u043A\u0442\u0447\u0435\u043A\u0438\u043D\u0433\u043E\u0432\u0430\u044F \u0440\u0435\u0434\u0430\u043A\u0446\u0438\u044F.` : `${source.name} \u0432\u0445\u043E\u0434\u0438\u0442 \u0432 \u043A\u043E\u043D\u0442\u0443\u0440 \u0440\u0435\u0434\u0430\u043A\u0446\u0438\u0439 \u0441 \u0436\u0451\u0441\u0442\u043A\u043E\u0439 \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u043E\u0439 \u0444\u0430\u043A\u0442\u043E\u0432.`
-      );
-    } else if (source?.tier === "established") {
-      score += 18;
-      meters.source = 74;
+    if (ru?.kind === "official") {
+      score += 34;
+      meters.source = 90;
+      meters.cross = 82;
+      reasons.push(`${ru.name} \u0432\u0445\u043E\u0434\u0438\u0442 \u0432 \u0431\u0430\u043D\u043A \u0440\u043E\u0441\u0441\u0438\u0439\u0441\u043A\u0438\u0445 \u0438\u0441\u0442\u043E\u0447\u043D\u0438\u043A\u043E\u0432: \u044D\u0442\u043E \u043E\u0444\u0438\u0446\u0438\u0430\u043B\u044C\u043D\u044B\u0439 \u0441\u0430\u0439\u0442.`);
+    } else if (ru) {
+      score += ru.kind === "state" ? 16 : 18;
+      meters.source = ru.kind === "state" ? 72 : 76;
       meters.cross = 66;
-      reasons.push(`\u0423 ${source.name} \u0435\u0441\u0442\u044C \u0440\u0435\u0434\u0430\u043A\u0446\u0438\u044F \u0438 \u043F\u0440\u0430\u043A\u0442\u0438\u043A\u0430 \u043F\u043E\u043F\u0440\u0430\u0432\u043E\u043A. \u042D\u0442\u043E \u043D\u0435 \u043E\u0441\u0432\u043E\u0431\u043E\u0436\u0434\u0430\u0435\u0442 \u0442\u0435\u043A\u0441\u0442 \u043E\u0442 \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u0438.`);
-    } else if (source?.tier === "state") {
-      meters.source = 42;
-      meters.cross = 38;
-      reasons.push(`${source.name} \u2014 \u0433\u043E\u0441\u0443\u0434\u0430\u0440\u0441\u0442\u0432\u0435\u043D\u043D\u043E\u0435 \u0438\u043B\u0438 \u0430\u0444\u0444\u0438\u043B\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u043E\u0435 \u043C\u0435\u0434\u0438\u0430. \u042D\u0442\u043E \u043D\u0435 \u044F\u0440\u043B\u044B\u043A \xAB\u0444\u0435\u0439\u043A\xBB, \u043D\u043E \u043F\u043E\u0432\u0435\u0441\u0442\u043A\u0430 \u043C\u043E\u0436\u0435\u0442 \u0431\u044B\u0442\u044C \u0443\u043F\u0440\u0430\u0432\u043B\u044F\u0435\u043C\u043E\u0439.`);
-    } else if (source?.tier === "low") {
+      reasons.push(ru.kind === "state" ? `${ru.name} \u0435\u0441\u0442\u044C \u0432 \u0431\u0430\u043D\u043A\u0435 \u0440\u043E\u0441\u0441\u0438\u0439\u0441\u043A\u0438\u0445 \u0438\u0441\u0442\u043E\u0447\u043D\u0438\u043A\u043E\u0432. \u042D\u0442\u043E \u0433\u043E\u0441\u0443\u0434\u0430\u0440\u0441\u0442\u0432\u0435\u043D\u043D\u043E\u0435 \u043C\u0435\u0434\u0438\u0430: \u0438\u0441\u0442\u043E\u0447\u043D\u0438\u043A \u0437\u043D\u0430\u043A\u043E\u043C\u044B\u0439, \u0438 \u044D\u0442\u043E \u043D\u0435 \u044F\u0440\u043B\u044B\u043A \xAB\u0444\u0435\u0439\u043A\xBB.` : `${ru.name} \u0435\u0441\u0442\u044C \u0432 \u0431\u0430\u043D\u043A\u0435 \u0440\u043E\u0441\u0441\u0438\u0439\u0441\u043A\u0438\u0445 \u0438\u0441\u0442\u043E\u0447\u043D\u0438\u043A\u043E\u0432.`);
+    } else if (listed?.tier === "low") {
       score -= 36;
       meters.source = 10;
       meters.cross = 16;
       flags.harsh = true;
-      reasons.push(`${source.name} \u043C\u043D\u043E\u0433\u043E\u043A\u0440\u0430\u0442\u043D\u043E \u043E\u0442\u043C\u0435\u0447\u0430\u043B\u0441\u044F \u0444\u0430\u043A\u0442\u0447\u0435\u043A\u0435\u0440\u0430\u043C\u0438 \u0437\u0430 \u0432\u044B\u0434\u0443\u043C\u0430\u043D\u043D\u044B\u0435 \u0438\u043B\u0438 \u0432\u0432\u043E\u0434\u044F\u0449\u0438\u0435 \u0432 \u0437\u0430\u0431\u043B\u0443\u0436\u0434\u0435\u043D\u0438\u0435 \u043C\u0430\u0442\u0435\u0440\u0438\u0430\u043B\u044B.`);
+      reasons.push(`${listed.name} \u043C\u043D\u043E\u0433\u043E\u043A\u0440\u0430\u0442\u043D\u043E \u043E\u0442\u043C\u0435\u0447\u0430\u043B\u0441\u044F \u0437\u0430 \u0432\u044B\u0434\u0443\u043C\u0430\u043D\u043D\u044B\u0435 \u0438\u043B\u0438 \u0432\u0432\u043E\u0434\u044F\u0449\u0438\u0435 \u0432 \u0437\u0430\u0431\u043B\u0443\u0436\u0434\u0435\u043D\u0438\u0435 \u043C\u0430\u0442\u0435\u0440\u0438\u0430\u043B\u044B.`);
+    } else if (listed && ["high", "factcheck", "established", "state"].includes(listed.tier)) {
+      flags.unlisted = true;
+      score += listed.tier === "high" || listed.tier === "factcheck" ? 6 : 2;
+      meters.source = 52;
+      meters.cross = 46;
+      reasons.push(`${listed.name} \u0438\u0437\u0432\u0435\u0441\u0442\u0435\u043D, \u043D\u043E \u0441\u0430\u0439\u0442\u0430 \u043D\u0435\u0442 \u0432 \u0431\u0430\u043D\u043A\u0435 \u0440\u043E\u0441\u0441\u0438\u0439\u0441\u043A\u0438\u0445 \u0438\u0441\u0442\u043E\u0447\u043D\u0438\u043A\u043E\u0432. \u041A\u0430\u043A \u0445\u043E\u0440\u043E\u0448\u0438\u0439 \u043E\u043D \u043D\u0435 \u043E\u0442\u043C\u0435\u0447\u0430\u0435\u0442\u0441\u044F.`);
     } else if (!flags.shortener) {
-      reasons.push("\u0414\u043E\u043C\u0435\u043D\u0430 \u043D\u0435\u0442 \u0432 \u043B\u043E\u043A\u0430\u043B\u044C\u043D\u043E\u0439 \u0431\u0430\u0437\u0435 \u0440\u0435\u043F\u0443\u0442\u0430\u0446\u0438\u0438. \u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E\u0441\u0442\u044C \u2014 \u043D\u0435 \u0434\u043E\u043A\u0430\u0437\u0430\u0442\u0435\u043B\u044C\u0441\u0442\u0432\u043E \u0444\u0435\u0439\u043A\u0430.");
+      flags.unlisted = true;
+      reasons.push("\u0421\u0430\u0439\u0442\u0430 \u043D\u0435\u0442 \u0432 \u0431\u0430\u043D\u043A\u0435 \u0440\u043E\u0441\u0441\u0438\u0439\u0441\u043A\u0438\u0445 \u0438\u0441\u0442\u043E\u0447\u043D\u0438\u043A\u043E\u0432. \u041A\u0430\u043A \u0445\u043E\u0440\u043E\u0448\u0438\u0439 \u043E\u043D \u043D\u0435 \u043E\u0442\u043C\u0435\u0447\u0430\u0435\u0442\u0441\u044F. \u0421\u0430\u043C\u043E \u043F\u043E \u0441\u0435\u0431\u0435 \u044D\u0442\u043E \u043D\u0435 \u0434\u043E\u043A\u0430\u0437\u0430\u0442\u0435\u043B\u044C\u0441\u0442\u0432\u043E \u0444\u0435\u0439\u043A\u0430.");
     }
     const impersonation = source ? null : detectImpersonation(domain);
     if (impersonation) {
@@ -819,6 +927,21 @@
     if (flags.shortener && verdict === "insufficient") {
       return "\u041F\u043E\u043A\u0430 \u0432\u0438\u0434\u0435\u043D \u0442\u043E\u043B\u044C\u043A\u043E \u043A\u043E\u0440\u043E\u0442\u043A\u0438\u0439 \u0430\u0434\u0440\u0435\u0441. \u0423\u0433\u043B\u0443\u0431\u043B\u0451\u043D\u043D\u0430\u044F \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u0430 \u043F\u043E\u043F\u0440\u043E\u0431\u0443\u0435\u0442 \u0440\u0430\u0441\u043A\u0440\u044B\u0442\u044C, \u043A\u0443\u0434\u0430 \u043E\u043D \u0432\u0435\u0434\u0451\u0442.";
     }
+    if (flags.unlisted && source && verdict === "mixed") {
+      return `${source.name} \u0438\u0437\u0432\u0435\u0441\u0442\u0435\u043D, \u043D\u043E \u0441\u0430\u0439\u0442\u0430 \u043D\u0435\u0442 \u0432 \u0431\u0430\u043D\u043A\u0435 \u0440\u043E\u0441\u0441\u0438\u0439\u0441\u043A\u0438\u0445 \u0438\u0441\u0442\u043E\u0447\u043D\u0438\u043A\u043E\u0432. \u041A\u0430\u043A \u0445\u043E\u0440\u043E\u0448\u0438\u0439 \u043E\u043D \u043D\u0435 \u043E\u0442\u043C\u0435\u0447\u0430\u0435\u0442\u0441\u044F.`;
+    }
+    if (flags.unlisted && !source && (verdict === "insufficient" || verdict === "mixed")) {
+      return "\u0421\u0430\u0439\u0442\u0430 \u043D\u0435\u0442 \u0432 \u0431\u0430\u043D\u043A\u0435 \u0440\u043E\u0441\u0441\u0438\u0439\u0441\u043A\u0438\u0445 \u0438\u0441\u0442\u043E\u0447\u043D\u0438\u043A\u043E\u0432. \u041A\u0430\u043A \u0445\u043E\u0440\u043E\u0448\u0438\u0439 \u043E\u043D \u043D\u0435 \u043E\u0442\u043C\u0435\u0447\u0430\u0435\u0442\u0441\u044F, \u0438 \u044D\u0442\u043E \u0435\u0449\u0451 \u043D\u0435 \u0437\u043D\u0430\u0447\u0438\u0442, \u0447\u0442\u043E \u043C\u0430\u0442\u0435\u0440\u0438\u0430\u043B \u0444\u0435\u0439\u043A\u043E\u0432\u044B\u0439.";
+    }
+    if (source?.tier === "official") {
+      return `${source.name} \u0432\u0445\u043E\u0434\u0438\u0442 \u0432 \u0431\u0430\u043D\u043A \u0440\u043E\u0441\u0441\u0438\u0439\u0441\u043A\u0438\u0445 \u0438\u0441\u0442\u043E\u0447\u043D\u0438\u043A\u043E\u0432: \u044D\u0442\u043E \u043E\u0444\u0438\u0446\u0438\u0430\u043B\u044C\u043D\u044B\u0439 \u0441\u0430\u0439\u0442.`;
+    }
+    if (source?.tier === "registry" && flags.state) {
+      return `${source.name} \u0435\u0441\u0442\u044C \u0432 \u0431\u0430\u043D\u043A\u0435 \u0440\u043E\u0441\u0441\u0438\u0439\u0441\u043A\u0438\u0445 \u0438\u0441\u0442\u043E\u0447\u043D\u0438\u043A\u043E\u0432. \u042D\u0442\u043E \u0433\u043E\u0441\u0443\u0434\u0430\u0440\u0441\u0442\u0432\u0435\u043D\u043D\u043E\u0435 \u043C\u0435\u0434\u0438\u0430: \u0438\u0441\u0442\u043E\u0447\u043D\u0438\u043A \u0437\u043D\u0430\u043A\u043E\u043C\u044B\u0439, \u0438 \u044D\u0442\u043E \u043D\u0435 \u044F\u0440\u043B\u044B\u043A \xAB\u0444\u0435\u0439\u043A\xBB.`;
+    }
+    if (source?.tier === "registry") {
+      return `${source.name} \u0435\u0441\u0442\u044C \u0432 \u0431\u0430\u043D\u043A\u0435 \u0440\u043E\u0441\u0441\u0438\u0439\u0441\u043A\u0438\u0445 \u0438\u0441\u0442\u043E\u0447\u043D\u0438\u043A\u043E\u0432.`;
+    }
     if (source?.tier === "state" && verdict === "mixed") {
       return `${source.name} \u2014 \u0433\u043E\u0441\u0443\u0434\u0430\u0440\u0441\u0442\u0432\u0435\u043D\u043D\u043E\u0435 \u0438\u043B\u0438 \u0430\u0444\u0444\u0438\u043B\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u043E\u0435 \u043C\u0435\u0434\u0438\u0430. \u042D\u0442\u043E \u043D\u0435 \u044F\u0440\u043B\u044B\u043A \xAB\u0444\u0435\u0439\u043A\xBB, \u043D\u043E \u043F\u043E\u0432\u0435\u0441\u0442\u043A\u0430 \u043C\u043E\u0436\u0435\u0442 \u0431\u044B\u0442\u044C \u0443\u043F\u0440\u0430\u0432\u043B\u044F\u0435\u043C\u043E\u0439.`;
     }
@@ -838,6 +961,11 @@
     if (flags.shortener && !flags.impersonation && score > 28) return "insufficient";
     if (flags.impersonation) return score < 42 ? "likely_fake" : "suspicious";
     if (source?.tier === "low") return score < 55 ? "likely_fake" : "suspicious";
+    if (source?.tier === "official") return score < 64 ? "leaning" : "reliable";
+    if (source?.tier === "registry") return score < 40 ? "suspicious" : "leaning";
+    if (flags.unlisted && source && ["high", "factcheck", "established", "state"].includes(source.tier)) {
+      return score < 40 ? "suspicious" : "mixed";
+    }
     if (source?.tier === "state") return score < 40 ? "suspicious" : "mixed";
     if (!source && !flags.harsh) return score >= 64 ? "mixed" : "insufficient";
     if (score < 34) return "likely_fake";
@@ -906,7 +1034,7 @@
       summary,
       reasons: [summary],
       meters: { source: 40, rhetoric: 50, url: 40, cross: 20 },
-      flags: { impersonation: false, satire: false, shortener: false, harsh: false, state: false },
+      flags: { impersonation: false, satire: false, shortener: false, harsh: false, state: false, unlisted: false },
       source: null,
       engine: "local",
       title: "",
@@ -936,7 +1064,7 @@
     }
   }
 
-  // ../../workspace/auris/lib/present.js
+  // auris/lib/present.js
   function present(result, extra = {}) {
     const verdict = result?.verdict || "insufficient";
     const engine = result?.engine || "local";
@@ -960,7 +1088,7 @@
     };
   }
 
-  // ../../workspace/auris/lib/text.js
+  // auris/lib/text.js
   var MIN_ARTICLE_CHARS = 200;
   var ATTRIBUTION = /по данным|сообщ(?:ил[аи]?|ает)|заявил[аи]?|according to|said that|told reporters|агентство|цитирует/i;
   var QUOTE = /[«"][^»"]{12,}[»"]/;
@@ -1099,7 +1227,7 @@
   function railScore(result, blended) {
     let score = blended;
     const tier = result.source?.tier;
-    if ((tier === "high" || tier === "factcheck") && score < 52) score = 52;
+    if ((tier === "high" || tier === "factcheck" || tier === "official" || tier === "registry") && score < 52) score = 52;
     if (tier === "state" && score < 40) score = 40;
     if ((tier === "low" || result.flags?.impersonation) && score > result.score) score = result.score;
     return clamp(score, 3, 96);
@@ -1116,7 +1244,7 @@
     return out;
   }
 
-  // ../../workspace/auris/lib/defaults.js
+  // auris/lib/defaults.js
   var DEFAULT_SETTINGS = {
     enabled: true,
     hoverDelay: 260,
@@ -1126,7 +1254,7 @@
   };
   var SETTINGS_KEY = "auris.settings";
 
-  // ../../workspace/auris/content/content.js
+  // auris/content/content.js
   if (document.documentElement.dataset.aurisPreview !== "true") {
     let settings = { ...DEFAULT_SETTINGS };
     chrome.storage.local.get(SETTINGS_KEY, (data) => {

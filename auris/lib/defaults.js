@@ -7,12 +7,14 @@ export const DEFAULT_SETTINGS = {
 };
 
 export const DEFAULT_SECRET = {
-  provider: "gemini",
+  provider: "yandex",
   apiKey: "",
   model: "",
   endpoint: "",
+  folderId: "",
 };
 
 export const SETTINGS_KEY = "auris.settings";
 export const SECRET_KEY = "auris.secret";
 export const HISTORY_KEY = "auris.history";
+export const WELCOME_KEY = "auris.welcome";

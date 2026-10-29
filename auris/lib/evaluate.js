@@ -1,5 +1,6 @@
 import { clamp } from "./clamp.js";
 import { VERDICT_SUMMARY } from "./copy.js";
+import { lookupRu } from "./ru-bank.js";
 import { BRANDS, SHORTENERS, SUSPICIOUS_TLDS, lookupSource } from "./sources.js";
 
 const FILE_RE = /\.(pdf|zip|rar|7z|png|jpe?g|gif|webp|svg|mp4|mp3|wav|docx?|xlsx?|pptx?|apk|dmg)($|\?)/i;
@@ -50,7 +51,11 @@ export function evaluateLink({ href, anchorText = "" } = {}) {
   }
 
   const domain = url.hostname.replace(/^www\./i, "").toLowerCase();
-  const source = lookupSource(domain);
+  const ru = lookupRu(domain);
+  const listed = ru ? null : lookupSource(domain);
+  const source = ru
+    ? { name: ru.name, tier: ru.kind === "official" ? "official" : "registry", domain: ru.domain }
+    : listed;
   const text = `${anchorText || ""} ${decodePath(url.pathname)}`.replace(/\s+/g, " ").trim();
   const rhetoric = analyzeRhetoric(text);
   const flags = {
@@ -58,7 +63,8 @@ export function evaluateLink({ href, anchorText = "" } = {}) {
     satire: false,
     shortener: false,
     harsh: false,
-    state: source?.tier === "state",
+    state: ru?.kind === "state" || listed?.tier === "state",
+    unlisted: false,
   };
   const reasons = [];
   let score = 50;
@@ -94,32 +100,33 @@ export function evaluateLink({ href, anchorText = "" } = {}) {
     reasons.push("Сервис коротких ссылок скрывает конечный адрес.");
   }
 
-  if (source?.tier === "high" || source?.tier === "factcheck") {
-    score += source.tier === "factcheck" ? 34 : 32;
-    meters.source = source.tier === "factcheck" ? 94 : 90;
-    meters.cross = 84;
-    reasons.push(
-      source.tier === "factcheck"
-        ? `${source.name} — фактчекинговая редакция.`
-        : `${source.name} входит в контур редакций с жёсткой проверкой фактов.`,
-    );
-  } else if (source?.tier === "established") {
-    score += 18;
-    meters.source = 74;
+  if (ru?.kind === "official") {
+    score += 34;
+    meters.source = 90;
+    meters.cross = 82;
+    reasons.push(`${ru.name} входит в банк российских источников: это официальный сайт.`);
+  } else if (ru) {
+    score += ru.kind === "state" ? 16 : 18;
+    meters.source = ru.kind === "state" ? 72 : 76;
     meters.cross = 66;
-    reasons.push(`У ${source.name} есть редакция и практика поправок. Это не освобождает текст от проверки.`);
-  } else if (source?.tier === "state") {
-    meters.source = 42;
-    meters.cross = 38;
-    reasons.push(`${source.name} — государственное или аффилированное медиа. Это не ярлык «фейк», но повестка может быть управляемой.`);
-  } else if (source?.tier === "low") {
+    reasons.push(ru.kind === "state"
+      ? `${ru.name} есть в банке российских источников. Это государственное медиа: источник знакомый, и это не ярлык «фейк».`
+      : `${ru.name} есть в банке российских источников.`);
+  } else if (listed?.tier === "low") {
     score -= 36;
     meters.source = 10;
     meters.cross = 16;
     flags.harsh = true;
-    reasons.push(`${source.name} многократно отмечался фактчекерами за выдуманные или вводящие в заблуждение материалы.`);
+    reasons.push(`${listed.name} многократно отмечался за выдуманные или вводящие в заблуждение материалы.`);
+  } else if (listed && ["high", "factcheck", "established", "state"].includes(listed.tier)) {
+    flags.unlisted = true;
+    score += listed.tier === "high" || listed.tier === "factcheck" ? 6 : 2;
+    meters.source = 52;
+    meters.cross = 46;
+    reasons.push(`${listed.name} известен, но сайта нет в банке российских источников. Как хороший он не отмечается.`);
   } else if (!flags.shortener) {
-    reasons.push("Домена нет в локальной базе репутации. Неизвестность — не доказательство фейка.");
+    flags.unlisted = true;
+    reasons.push("Сайта нет в банке российских источников. Как хороший он не отмечается. Само по себе это не доказательство фейка.");
   }
 
   const impersonation = source ? null : detectImpersonation(domain);
@@ -288,6 +295,21 @@ function summaryFor({ verdict, source, flags }) {
   if (flags.shortener && verdict === "insufficient") {
     return "Пока виден только короткий адрес. Углублённая проверка попробует раскрыть, куда он ведёт.";
   }
+  if (flags.unlisted && source && verdict === "mixed") {
+    return `${source.name} известен, но сайта нет в банке российских источников. Как хороший он не отмечается.`;
+  }
+  if (flags.unlisted && !source && (verdict === "insufficient" || verdict === "mixed")) {
+    return "Сайта нет в банке российских источников. Как хороший он не отмечается, и это ещё не значит, что материал фейковый.";
+  }
+  if (source?.tier === "official") {
+    return `${source.name} входит в банк российских источников: это официальный сайт.`;
+  }
+  if (source?.tier === "registry" && flags.state) {
+    return `${source.name} есть в банке российских источников. Это государственное медиа: источник знакомый, и это не ярлык «фейк».`;
+  }
+  if (source?.tier === "registry") {
+    return `${source.name} есть в банке российских источников.`;
+  }
   if (source?.tier === "state" && verdict === "mixed") {
     return `${source.name} — государственное или аффилированное медиа. Это не ярлык «фейк», но повестка может быть управляемой.`;
   }
@@ -308,6 +330,11 @@ function decideVerdict({ score, source, flags }) {
   if (flags.shortener && !flags.impersonation && score > 28) return "insufficient";
   if (flags.impersonation) return score < 42 ? "likely_fake" : "suspicious";
   if (source?.tier === "low") return score < 55 ? "likely_fake" : "suspicious";
+  if (source?.tier === "official") return score < 64 ? "leaning" : "reliable";
+  if (source?.tier === "registry") return score < 40 ? "suspicious" : "leaning";
+  if (flags.unlisted && source && ["high", "factcheck", "established", "state"].includes(source.tier)) {
+    return score < 40 ? "suspicious" : "mixed";
+  }
   if (source?.tier === "state") return score < 40 ? "suspicious" : "mixed";
   if (!source && !flags.harsh) return score >= 64 ? "mixed" : "insufficient";
   if (score < 34) return "likely_fake";
@@ -385,7 +412,7 @@ function blank(href, summary) {
     summary,
     reasons: [summary],
     meters: { source: 40, rhetoric: 50, url: 40, cross: 20 },
-    flags: { impersonation: false, satire: false, shortener: false, harsh: false, state: false },
+    flags: { impersonation: false, satire: false, shortener: false, harsh: false, state: false, unlisted: false },
     source: null,
     engine: "local",
     title: "",

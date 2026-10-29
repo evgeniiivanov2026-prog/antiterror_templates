@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { yandexModelUri } from "../background/ai.js";
 import { extractArticleFromHtml } from "../lib/article.js";
+import { lookupRu } from "../lib/ru-bank.js";
 import { BRANDS, lookupSource } from "../lib/sources.js";
 import { applyMeta, evaluateLink, shouldInspect } from "../lib/evaluate.js";
 import { extractMeta } from "../lib/meta.js";
@@ -8,23 +10,39 @@ import { fuse, parseModelJson } from "../lib/model.js";
 import { buildUserPrompt } from "../lib/prompt.js";
 import { applyText, assessPlain, detectLanguage } from "../lib/text.js";
 
-test("reuters looks reliable", () => {
+test("an official russian site in the bank is good", () => {
+  const result = evaluateLink({
+    href: "https://www.fedsfm.ru/documents/terr-list",
+    anchorText: "Росфинмониторинг: перечень",
+  });
+  assert.equal(result.verdict, "reliable");
+  assert.equal(result.source.tier, "official");
+  assert.equal(result.source.name, "Росфинмониторинг");
+  assert.equal(lookupRu("cbr.ru").kind, "official");
+  assert.match(result.summary, /банк российских источников/);
+});
+
+test("reuters is outside the russian bank and is not marked good or fake", () => {
   const result = evaluateLink({
     href: "https://www.reuters.com/world/europe/ships-reroute-after-storm-2026",
     anchorText: "Cargo ships reroute after a North Sea storm warning",
   });
-  assert.equal(result.verdict, "reliable");
-  assert.ok(result.score >= 80);
+  assert.equal(result.verdict, "mixed");
+  assert.equal(result.flags.unlisted, true);
   assert.equal(result.source.tier, "high");
+  assert.match(result.summary, /нет в банке российских источников/);
+  assert.doesNotMatch(result.summary, /фейк/);
 });
 
-test("state media is mixed, not labeled fake", () => {
+test("state media in the russian bank is known and not labeled fake", () => {
   const result = evaluateLink({
     href: "https://tass.ru/politika/1234567",
     anchorText: "ТАСС: комментарий официального представителя",
   });
-  assert.equal(result.verdict, "mixed");
-  assert.equal(result.source.tier, "state");
+  assert.equal(result.verdict, "leaning");
+  assert.equal(result.source.tier, "registry");
+  assert.equal(result.flags.state, true);
+  assert.match(result.summary, /банке российских источников/);
   assert.match(result.summary, /не ярлык «фейк»/);
 });
 
@@ -36,13 +54,16 @@ test("satire keeps its own verdict", () => {
   assert.equal(result.verdict, "satire");
 });
 
-test("unknown calm page is insufficient data", () => {
+test("unknown calm page is not marked good", () => {
   const result = evaluateLink({
     href: "https://example.com/about",
     anchorText: "About",
   });
   assert.equal(result.verdict, "insufficient");
+  assert.equal(result.flags.unlisted, true);
   assert.ok(result.score >= 45 && result.score <= 60);
+  assert.match(result.summary, /нет в банке российских источников/);
+  assert.notEqual(result.verdict, "likely_fake");
 });
 
 test("clickbait on a disposable domain looks fake", () => {
@@ -108,7 +129,7 @@ test("subdomain inherits the parent newsroom", () => {
   assert.equal(lookupSource("news.bbc.co.uk").domain, "bbc.co.uk");
 });
 
-test("headline can pull a reliable source down to mixed", () => {
+test("headline can pull an outside wire below its local score", () => {
   const local = evaluateLink({
     href: "https://www.reuters.com/world/example",
     anchorText: "Cargo ships reroute",
@@ -118,7 +139,8 @@ test("headline can pull a reliable source down to mixed", () => {
     description: "Срочная сенсация",
   });
   assert.ok(refined.score < local.score);
-  assert.equal(refined.verdict, "mixed");
+  assert.notEqual(refined.verdict, "reliable");
+  assert.notEqual(refined.verdict, "likely_fake");
   assert.equal(refined.title, "ШОК Врачи скрывают это от вас!!!");
 });
 
@@ -280,6 +302,13 @@ test("article text cannot rehabilitate a lookalike or rewrite satire", () => {
     anchorText: "Nation Announces It Did The Thing",
   });
   assert.equal(applyText(onion, shock, { mode: "page" }).verdict, "satire");
+});
+
+test("alice model uri needs a folder and defaults to alice", () => {
+  assert.equal(yandexModelUri("b1gexamplefolder1", ""), "gpt://b1gexamplefolder1/aliceai-llm");
+  assert.equal(yandexModelUri("b1gexamplefolder1", "yandexgpt-5-lite"), "gpt://b1gexamplefolder1/yandexgpt-5-lite");
+  assert.equal(yandexModelUri("", "aliceai-llm"), "");
+  assert.equal(yandexModelUri("b1gexamplefolder1", "gpt://b1gexamplefolder1/aliceai-llm"), "gpt://b1gexamplefolder1/aliceai-llm");
 });
 
 test("pasted text is judged without a domain", () => {

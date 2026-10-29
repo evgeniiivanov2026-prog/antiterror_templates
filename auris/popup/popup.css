@@ -61,6 +61,21 @@ body {
   line-height: 1.4;
 }
 
+.intro {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(142, 246, 214, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(142, 246, 214, 0.2);
+}
+
+.intro[hidden] { display: none; }
+.intro strong { font-size: 13px; }
+.intro p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.intro-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
 .switch-row, form, section {
   margin-top: 14px;
 }
@@ -155,7 +170,7 @@ textarea {
 
 .check { display: grid; gap: 10px; }
 
-#check-tab, #check-text, #test {
+#check-tab, #check-text, #test, #intro-open, #guide {
   border: 0;
   border-radius: 999px;
   padding: 10px 14px;
@@ -165,11 +180,13 @@ textarea {
   cursor: pointer;
 }
 
-#check-tab {
+#check-tab, #intro-done, #guide {
   background: transparent;
   color: var(--ink);
   box-shadow: inset 0 0 0 1px var(--line);
 }
+
+#guide { margin-top: 4px; }
 
 #test:disabled, #check-text:disabled, #check-tab:disabled { opacity: 0.6; cursor: progress; }
 
